@@ -1,0 +1,447 @@
+---
+title: "Non-virtual polymorphism C++"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    theme: moon
+    logo: images/fluxim.png
+    css: styles.css
+    footer: <https://fluxim.com>
+resources:
+  - demo.pdf
+---
+
+# Runtime (dynamic) polymorphism
+
+## Introductory example: reflections
+
+```{.cpp}
+class Workspace {
+   void Workspace::setNaN();
+
+   std::complex<double, double> complexValue;
+   std::double doubleValue;
+   std::vector<double> vector;
+};
+```
+
+::: {style="margin-top: 30px;"}
+We need to implement  `Workspace::setNaN()`:
+:::
+
+
+::: {style="margin-top: 30px;"}
+```{.cpp}
+void Workspace::setNaN() {
+   complexValue = std::numeric_limits<std::complex<double>>::quiet_NaN();
+   doubleValue = std::numeric_limits<std::double>::quiet_NaN();
+   std::fill(vector.begin(), vector.end(), std::numeric_limits<std::double>::quiet_NaN());
+};
+```
+:::
+
+## Slightly better: common base class
+```{.cpp}
+class Reflectable {
+   virtual void setNaN() = 0;
+};
+
+class Complex : Reflectable {
+   void setNan() override { ...};
+   std::complex<double> value_;
+};
+
+class Double : Reflectable {
+   void setNan() override { ...};
+   double value_;
+};
+
+class VectorDouble : Reflectable {
+   void setNan() override { ...};
+   std::vector<double>  value_;
+};
+```
+
+---
+
+```{.cpp}
+class Workspace {
+   void Workspace::setNaN();
+
+   std::vector<Reflectable *> reflection;
+
+   Complex complexValue;
+   Double doubleValue;
+   VectorDouble vector;
+};
+```
+
+::: {style="margin-top: 50px;"}
+```{.cpp}
+void Workspace::setNaN() {
+   for (Reflectable *r : reflection) {
+      r->setNaN();
+   }
+};
+```
+:::
+
+::: {style="margin-top: 30px; color: Limegreen"}
+=> Runtime (dynamic) polymorphism.
+:::
+
+## Dynamic polymorphism - comments
+
+* Easy to implement
+* Conveys misleading meaning to reader ("can change at runtime")
+* Virtual function calls are expensive (~10 cycles but might pollute cache)
+
+# Compile time (static) polymorphism
+
+## Challenges
+
+1. Container for heterogeneous objects?
+
+::: {style="margin-top: 30px;"}
+```{.cpp}
+std::vector<double> values;
+```
+:::
+
+::: {style="margin-top: 30px;"}
+2. How to call the correct `setNaN` method?
+:::
+
+::: {style="margin-top: 30px;"}
+```{.cpp}
+void setNaN(std::complex<double> &val) { ... };
+
+void setNaN(double &vale) { ... };
+
+void setNan(std::vector<double> &vec) { ... };
+```
+:::
+
+## Store in tuple
+```{.cpp}
+struct Double  {
+    void print() { std::cout << "Double!" << std::endl;}
+};
+
+struct Vector  {
+    void print() { std::cout << "Vector!" << std::endl;}
+};
+
+int main() {
+
+    auto workspace = std::make_tuple<Vector, Double, Vector>({},{},{});
+
+    std::get<0>(workspace).print();
+    std::get<1>(workspace).print();
+    std::get<2>(workspace).print();
+
+    return 0;
+}
+```
+
+## Variadic templates
+```{.cpp}
+#include <iostream>
+
+template <typename ...T>
+void print(T const & ...args) {
+    std::cout << "I have " << sizeof...(args) << " elements!" << std::endl;
+};
+
+int main() {
+
+    print(1.5,2,3);
+    print(4);
+    print(5.76,6,7,87,9, std::string("huhu"));
+
+    return 0;
+}
+```
+
+## Folds
+```{.cpp}
+template <typename ...T>
+void print(T const & ...args) {
+     // *binary* left fold, '0' is the neutral element
+    std::cout << (0 + ... + args) << std::endl; // '6.5'
+
+    // *unary* right fold
+    ((std::cout << args <<", "), ...); // '1.5, 2, 3,`
+};
+
+int main() {
+
+    print(1.5,2,3);
+
+    return 0;
+}
+```
+
+## `std::apply`
+```{.cpp}
+void print(int i, double d) {
+    std::cout << "Integer " << i << ", double " << d << std::endl;
+}
+
+int main(void) {
+
+    std::apply(print, std::make_tuple(3, 4.0));
+    std::apply(print, std::make_tuple(3, 4));
+    //std::apply(print, std::make_tuple(3, "Hi")); // <- doesn't work
+
+    return 0;
+}
+```
+
+## Unfolding the call
+```{.cpp}
+struct Double  {
+    void print() { std::cout << "Double!" << std::endl;}
+};
+
+struct Vector  {
+    void print() { std::cout << "Vector!" << std::endl;}
+};
+
+int main() {
+
+    auto workspace = std::make_tuple<Vector, Double, Vector>({},{},{});
+    auto printAll = [](auto &...x){(x.print(), ...);};
+
+    std::apply(printAll , workspace);
+
+    return 0;
+}
+```
+
+# Composition over inheritance
+
+## (Don't) use inheritance for code reuse
+
+```{mermaid}
+classDiagram
+   MeshQuantity <|-- VertexQuantity
+   MeshQuantity <|-- CellQuantity
+
+   MeshQuantity: +interpolateToVertex()
+   MeshQuantity: +interpolateToCell()
+   MeshQuantity: +accumulate()
+
+   VertexQuantity: +interpolateToCell() 
+
+   CellQuantity: +interpolateToVertex()
+```
+
+## (Don't) use inheritance for code reuse
+
+```{mermaid}
+classDiagram
+   MeshQuantity <|-- VertexQuantity
+   MeshQuantity <|-- CellQuantity
+
+   MeshQuantity: +interpolateToVertex()
+   MeshQuantity: +interpolateToCell()
+   MeshQuantity: +accumulate()
+
+   VertexQuantity: +interpolateToCell() 
+
+   CellQuantity: +interpolateToVertex()
+
+    VertexQuantity <|-- VertexCellQuantity
+    CellQuantity <|-- VertexCellQuantity
+```
+
+## Use composition instead {.smaller}
+```{.cpp}
+struct MeshQuantity {
+   MeshQuantity(std::unique_ptr<Interpolator *> vertexInterpolator,
+                std::unique_ptr<Interpolator *> cellInterpolator);
+
+   void interpolateToVertex() = { VertexInterpolator->interpolate(); }
+   void interpolateToCell() = { CellInterpolator->interpolate(); }
+};
+
+struct Interpolator {
+   virtual void interpolate() = 0;
+};
+
+struct NoInterpolator : Interpolator {
+   void interpolate() override = { /* do nothing */ };
+};
+
+
+struct VertexInterpolator : Interpolator {
+   void interpolate() override = { /* interpolate from cell to vertex */ };
+};
+
+struct CellQuantity : MeshQuantity {
+   CellQuantity()
+      : MeshQuantity(std::make_unique<VertexInterpolator *>(),
+                     std::make_unique<NoInterpolator *>()) {};
+};
+```
+
+::: {style="margin-top: 30px; color: Limegreen"}
+=> Use inheritance only to implement abstract interfaces.
+:::
+
+# Mixins
+
+## Mixins introduction
+
+```{.cpp}
+template <typename... Mixins>
+struct MeshQuantity : public Mixins...
+{
+MeshQuantity() : Mixins()...
+
+void accumulate();
+};
+
+struct VertexInterpolater {
+   void interpolateToVertex();
+};
+
+struct NoVertexInterpolater {
+   void interpolateToVertex() = {};
+};
+
+// .. same for cells
+```
+
+::: aside
+Learn more at [Template Design Patterns](https://www.ida.liu.se/~TDDD38/lecture/slides/design_patterns.pdf)
+:::
+
+
+## Mixins 
+
+We can then easily mix and match:
+
+::: {style="margin-top: 30px;"}
+```{.cpp}
+using VertexQuantity =
+         MeshQuantity<VertexInterpolator, NoCellInterpolator>;
+
+using CellQuantity =
+         MeshQuantity<NoVertexInterpolator, CellInterpolator>;
+
+using VertexCellQuantity =
+         MeshQuantity<NoVertexInterpolator, NoCellInterpolator>;
+```
+:::
+
+::: {style="margin-top: 30px; color: Limegreen"}
+=> No virtual keyword, no diamond problem.
+:::
+
+## Mixins for reflection - Workspace variables
+```{.cpp}
+struct Scalar {
+    void print() { std::cout << "Scalar" << std::endl; }
+};
+
+struct Vector {
+    void print() { std::cout << "Vector" << std::endl; }
+};
+
+struct Temperature : Vector {};
+struct Density : Vector{};
+struct BuiltInVoltage : Scalar {};
+}
+```
+
+## Mixins for reflection - workspace
+```{.cpp}
+template <typename... Mixins>
+struct Workspace : public Mixins... {
+    Workspace() : Mixins()... { }
+
+    void printNumberVariables() {
+        std::cout << "We have " << sizeof...(Mixins) << " parameters.\n";
+    }
+    void printAll() {
+        (Mixins::print(), ...);
+    };
+};
+
+int main() {
+    Workspace<Temperature, Density, BuiltInVoltage> ws;
+
+    ws.printNumberVariables();
+    ws.printAll();
+}
+```
+
+::: aside
+Inspired by [MS devblog](https://devblogs.microsoft.com/oldnewthing/20210114-00/?p=104714)
+:::
+
+# Dynamic containers
+
+## Discriminated unions (aka sum types aka union)
+
+`std::variant` provides typesafe union object
+
+::: {style="margin-top: 50px;"}
+```{.cpp}
+using VertexQuantity =
+         MeshQuantity<VertexInterpolator, NoCellInterpolator>;
+
+using CellQuantity =
+         MeshQuantity<NoVertexInterpolator, CellInterpolator>;
+
+using VertexCellQuantity =
+         MeshQuantity<NoVertexInterpolator, NoCellInterpolator>;
+
+using Quantity
+   = std::variant< VertexQuantity, CellQuantity, VertexCellQuantity >;
+
+std::vector<Quantity> quantities_;
+```
+:::
+
+## Visiting heterogeneous containers
+```{.cpp}
+auto visitor = [](auto& arg) {
+    using T = std::decay_t<decltype(arg)>;
+
+    if constexpr (std::is_same_v<T, VertexQuantity>) {
+        // ...
+    }
+    else if constexpr (std::is_same_v<T, CellQuantity>) {
+        // ...
+    }
+    else if constexpr (std::is_same_v<T, VertexCellQuantity>) {
+        // ...
+    }
+};
+
+std::visit(visitor, quantities_);
+```
+
+::: aside
+See [std::visit is everything wrong with modern C++](https://bitbashing.io/std-visit.html)
+:::
+
+
+## Summary
+   * C++ templates have come a long way
+   * Prefer compile-time polymorphism if applicable
+   * `std::tuple` as container, `std::apply` and folds/variadic templates for invocation
+   * Mixins for code-reuse (instead of inheritance)
+
+## Literature
+   * [Template Design Patterns](https://www.ida.liu.se/~TDDD38/lecture/slides/design_patterns.pdf)
+   * [MS devblog](https://devblogs.microsoft.com/oldnewthing/20210114-00/?p=104714)
+   * [C++20 idioms for parameter packs](https://www.scs.stanford.edu/~dm/blog/param-pack.html) <= very advanced
+
+
