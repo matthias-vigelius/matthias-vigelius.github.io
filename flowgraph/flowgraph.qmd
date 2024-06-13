@@ -1,0 +1,129 @@
+---
+title: "TBB Flow Graph Library"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    theme: moon
+    logo: images/fluxim.png
+    css: styles.css
+    footer: <https://fluxim.com>
+resources:
+  - demo.pdf
+---
+
+## Dependency graph is not a tree
+![](images/parameters.bmp){height="400"}
+
+::: {style="margin-top: 30px; color: OrangeRed"}
+We cannot simply spawn new tasks.
+:::
+
+
+## TBB Flow Graph: Message-based parallelism
+![](images/flowgraph.jpg){height="300"}
+
+::: {style="margin-top: 30px;"}
+Messages spawn new tasks that are synchronized accordingly.
+:::
+
+## Join nodes need two messages
+::: columns
+::: {.column width="42%"}
+| a | b | join |
+|---|---|------|
+| 1 | 5 | {1,5}|
+| 2 | 6 | {2,6}|
+| 3 | 7 | {3,7}|
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="45%"}
+![](images/joinnode.bmp)
+:::
+:::
+
+::: {style="margin-top: 30px; color: OrangeRed"}
+But we need all combinations.
+:::
+
+## "Combinator" nodes remember messages
+| a | [a] | b | [b] | combinator |
+|---|-----|---|-----|------------|
+| 1 | []  | 5 | []  | {1, 5}     |
+| 2 | [1] | 6 | [5] | {1,6}, {2, 5}, {2,6} |
+| 3 | [1,2] | 7 | [5,6] | {3,5}, {3,6}, ... |
+
+::: {style="margin-top: 30px;"}
+Combine 
+
+* input 1 (new) + input 2 (previous)
+* input 2 (new) + input 1 (previous)
+* input 1 (new) + input 2 (new)
+:::
+
+## Dummy messages for different parameter ranges
+| a | [a] | b | [b] | combinator |
+|---|-----|---|-----|------------|
+| 1 | []  | 5 | []  | {1, 5}     |
+| 2 | [1] | d | [5] | {2, 5}     |
+| 3 | [1,2] | d | [5] | {3,5}    |
+
+::: {style="margin-top: 30px;"}
+Dummy messages are forwarded through computation nodes to guarantee activation of join nodes.
+:::
+
+
+## Expand graph into two-input nodes
+![](images/expanded.bmp){height="600"}
+
+
+## Easy-to-use framework
+```{.cpp}
+   SweepNode sweepNodeA1(g,
+         [&sweeperA1](tbb::flow_control& fc) { return sweeperA1.sweep(fc); }
+   );
+   SweepNode sweepNodeB(g,
+         [&sweeperB](tbb::flow_control& fc) { return sweeperB.sweep(fc); }
+   );
+
+   CombinatorNode combAB(g,
+         sweepNodeA1.getOutputNode(),
+         sweepNodeB.getOutputNode());
+
+   LongRunner<AbsorptionResults> aRComputer;
+     ComputationNode compAR(
+        g,
+        [&aRComputer](MessagePack const&mp) { return aRComputer.compute(mp); },
+        combAB.getOutputNode());
+
+   FinalNode final(g, 27, combAR.getOutputNode());
+```
+
+::: aside
+Check it out on [SET-3589](https://bitbucket.org/fluximag/setfos/src/SET-3589/).
+:::
+
+
+## Automatic generation of graph from user model
+![](images/result_top.bmp){height="400"}
+
+::: {style="margin-top: 30px;"}
+Topologically sort required results.
+:::
+
+## Automatic generation (2)
+![](images/result_param_topo.bmp){height="400"}
+
+::: {style="margin-top: 30px;"}
+Tag on parameters.
+:::
+
+## Complete (not yet) graph
+![](images/complete_graph.bmp){height="400"}
+
+
