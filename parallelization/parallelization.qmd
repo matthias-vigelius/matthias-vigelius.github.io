@@ -1,0 +1,168 @@
+---
+title: "Lock-free sweeps"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    theme: moon
+    logo: images/fluxim.png
+    css: styles.css
+resources:
+  - demo.pdf
+---
+
+## Dependencies in sweeps
+
+![](Basic.svg){fig-align="center"}
+
+## Naive-parallelization: tree-based
+![](Naive_Parallelization.svg){fig-align="center"}
+
+## Naive-parallelization: Problem
+![](Naive_Fail.svg){fig-align="center"}
+
+::: {style="margin-top: 30px;"}
+We compute scattering four times but only needed twice.
+:::
+
+## Cache with locks
+![](Two_Threads.svg){fig-align="center"}
+
+::: {style="margin-top: 30px;"}
+Underutilization of cores
+:::
+
+## Oversubscription of threads
+![](Four_Threads.svg){fig-align="center"}
+
+::: {style="margin-top: 30px;"}
+Context switch ($\sim 10^6$ threads)
+:::
+
+## Current solution: Thread pool
+![](Threadpool.svg){fig-align="center"}
+
+::: {style="margin-top: 30px;"}
+Doesn't work with locks
+:::
+
+## Lock-free approach: Wavefront pattern
+![](LockFree_1.svg){fig-align="center"}
+
+## Lock-free approach: Wavefront pattern
+![](LockFree_2.svg){fig-align="center"}
+
+## Lock-free approach: Wavefront pattern
+![](LockFree_3.svg){fig-align="center"}
+
+## Lock-free approach: Wavefront pattern
+![](LockFree_4.svg){fig-align="center"}
+
+## Implementation - abstract tree
+::: columns
+::: {.column width="52%"}
+![](Abstract_Tree.svg){height="400"}
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="35%"}
+   * depends on model
+   * topological sort
+:::
+:::
+
+## Implementation - equivalence classes
+
+|          | $R_1$ | $R_2$ | $R_3$ | $R_4$ | $R_5$ | $R_6$ | $R_7$ | $R_8$ | 
+|----------|-------|-------|-------|-------|-------|-------|-------|-------|
+|$d$       | 1     | 1     | 1     | 1     | 2     | 2     | 2     | 2     |
+|$\lambda$ | 1     | 1     | 2     | 2     | 1     | 1     | 2     | 2     |
+|$\theta$  | 1     | 2     | 1     | 2     | 1     | 2     | 1     | 2     |
+: Sweep over $\{d, \lambda, \theta\}$. {.striped .hover}
+
+::: {style="margin-top: 30px;"}
+Eight results in total.
+:::
+
+## Implementation - equivalence classes
+
+|          | $F_1$ | $F_2$ | $F_3$ | $F_4$ |
+|----------|-------|-------|-------|-------|
+|$d$       | 1     | 1     | 2     | 2     |
+|$\lambda$ | 1     | 2     | 1     | 2     |
+|$\theta$  | 1,2   | 1,2   | 1,2   | 1,2   |
+: . {.striped .hover}
+
+::: {style="margin-top: 30px;"}
+Fresnel task depends on $d$ and $\lambda$ => four Fresnel tasks.
+:::
+
+## Implementation - equivalence classes
+
+|          | $S_1$ | $S_2$ |
+|----------|-------|-------|
+|$d$       | 1,2   | 1,2   |
+|$\lambda$ | 1,2   | 2,2   |
+|$\theta$  | 1     | 2     |
+: . {.striped .hover}
+
+::: {style="margin-top: 30px;"}
+Scattering task depends on $\theta$ => two scattering tasks.
+:::
+
+## Implementation - equivalence classes
+
+|          | $N_1$ | $N_2$ | $N_3$ | $N_4$ | $N_5$ | $N_6$ | $N_7$ | $N_8$ | 
+|----------|-------|-------|-------|-------|-------|-------|-------|-------|
+|$d$       | 1     | 1     | 1     | 1     | 2     | 2     | 2     | 2     |
+|$\lambda$ | 1     | 1     | 2     | 2     | 1     | 1     | 2     | 2     |
+|$\theta$  | 1     | 2     | 1     | 2     | 1     | 2     | 1     | 2     |
+: Sweep over $\{d, \lambda, \theta\}$. {.striped .hover}
+
+::: {style="margin-top: 30px;"}
+Netradiation: no direct parameters but indirectly it depends on all pars.
+:::
+
+
+## Implementation - instantiated tree
+![](LockFree_1.svg){height="400"}
+
+## Implementation - Atomic counters
+::: columns
+::: {.column width="52%"}
+![](Partially_Completed.svg){height="400"}
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="35%"}
+   * Scattering A completes
+   * Checks *atomically* that Netradiation A1 is not ready
+   * records result in Netradiation A1 and exits
+:::
+:::
+
+## Implementation - Atomic counters
+::: columns
+::: {.column width="52%"}
+![](Fully_Completed.svg){height="400"}
+:::
+
+::: {.column width="3%"}
+:::
+
+::: {.column width="35%"}
+   * Fresnel 1 completes
+   * Checks *atomically* that Netradiation A1 is ready
+   * records result in Netradiation A1 and starts new task Netradiation A1
+:::
+:::
+
+## All dependencies so far
+![](Dependencies.svg){height="500"}
+
