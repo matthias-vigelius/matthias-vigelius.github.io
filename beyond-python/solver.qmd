@@ -1,0 +1,325 @@
+---
+title: "Basic Newton solver"
+execute:
+   echo: false
+wrap: none
+---
+
+```{python}
+import numpy as np
+import sympy as sp
+import h5py
+import scipy
+import matplotlib.pyplot as plt
+```
+
+We study the [equation](https://services.math.duke.edu/~jtwong/math563-2020/lectures/Lec9-BVPs.pdf)
+```{python}
+x = sp.symbols("x")
+y, p, q, r = sp.symbols("y p q r", cls=sp.Function)
+eq = y(x).diff(x,2) - 2*y(x)**3 + 6*y(x) + 2*x**3
+sp.Eq(eq, 0, evaluate = False)
+```
+
+with boundary conditions $y(1) = 2$, $y(2) = 5/2$.
+
+The solution can be obtained analytically:
+
+```{python}
+s, t, c = sp.symbols("s t c")
+sol = x+1/x
+sp.Eq(y(x), sol, evaluate=False)
+```
+
+Test
+```{python}
+(eq.subs(y(x), sol).doit()).simplify()
+```
+
+The discretized equation is
+
+```{python}
+y = sp.IndexedBase("y")
+x = sp.IndexedBase("x")
+i = sp.symbols("i", cls=sp.Idx)
+h = sp.symbols("h")
+disceq = 2*x[i]**3 - 2*y[i]**3 + 6*y[i] + (y[i-1] - 2 * y[i] + y[i+1])/h**2
+sp.Eq(disceq, 0, evaluate=False)
+```
+
+with the boundary conditions
+```{python}
+sp.Eq(y[0]-2, 0, evaluate=False)
+```
+
+and
+
+```{python}
+N = sp.symbols("N", cls=sp.Idx)
+sp.Eq(y[N-1]-sp.Rational(5,2), 0, evaluate=False)
+```
+
+The jacobian is
+
+```{python}
+sp.diff(disceq, y[i-1])
+```
+
+```{python}
+sp.diff(disceq, y[i])
+```
+
+```{python}
+sp.diff(disceq, y[i+1])
+```
+
+
+
+Discretization in numpy.
+
+```{python}
+floatType = np.float32
+
+def getJacobian(x, y):
+   #h = x[1] - x[0]
+   n = x.shape[0]
+   h = 1./float(n)
+   jac = np.zeros((n,n), dtype = floatType)
+   innermaindiag = (np.ogrid[1:n-1:1], np.ogrid[1:n-1:1])
+   innerlowerdiag = (np.ogrid[1:n-1:1], np.ogrid[0:n-2:1])
+   innerupperdiag = (np.ogrid[1:n-1:1], np.ogrid[2:n:1])
+
+   # f''
+   jac[innerlowerdiag] = 1/h**2
+   jac[innermaindiag] = -2/h**2
+   jac[innerupperdiag] = 1/h**2
+
+   # -2 y**3
+   jac[innermaindiag] += -6*y[1:-1]**2
+
+   # 6 y
+   jac[innermaindiag] += 6
+
+   # BC: y_{0/L} = a/b
+   jac[0,0] = 1
+   jac[n-1, n-1] = 1
+
+   return jac
+
+def getF(x,y):
+   n = x.shape[0]
+   #h = x[1] - x[0]
+   h = 1./float(n)
+   F = np.zeros(n, dtype = floatType)
+
+   # f''
+   F[1:-1] = (y[2:] + y[:-2] - 2* y[1:-1])/h**2
+
+   # 2 x**3
+   F[1:-1] += 2*x[1:-1]**3
+
+   # -2 y**3
+   F[1:-1] += -2*y[1:-1]**3
+
+   # 6 y
+   F[1:-1] += 6*y[1:-1]
+
+   # bc
+   F[0] = y[0] - 2
+   F[-1] = y[-1] - 2.5
+
+   return F
+
+def newtonIt(x, y, damping = 0.1):
+   F = getF(x,y)
+   jac = getJacobian(x,y)
+   delta = np.linalg.solve(jac, -F)
+   
+   return y+damping*delta
+
+# initial guess
+# y(x) = a*(x-1) + b
+# y(1) = 2 => b = 2
+# y(2) = 5/2 => a + 2 = 5/2 => a = 1/2
+def solveNewton(n=300, tol=1e-10):
+   x = np.ogrid[1:2:complex(n)]
+   sol0 = 0.5*(x-1) + 2
+   #theosol = x + 1/x
+   #plt.plot(x, theosol)
+   #plt.plot(x, sol0)
+   sol = sol0
+   normf = np.linalg.norm(getF(x, sol))
+   numSteps = 0
+   while normf > tol and numSteps < 500:
+      sol =newtonIt(x, sol) 
+      normf = np.linalg.norm(getF(x, sol))
+      numSteps += 1
+      #print(f"Numpy: {numSteps}, {normf}")
+
+   return x, sol
+
+import time
+
+start = time.time()
+x, solnp = solveNewton(500, 3)
+end = time.time()
+print(f"Numpy: {end - start}")
+
+#import cProfile
+#cProfile.run('solveNewton()')
+#x, sol = solveNewton(500, 1e-10)
+#plt.plot(x, sol)
+#np.linalg.norm(getF(x, sol))
+```
+
+# jax version
+```{python}
+import jax
+import jax.numpy as jnp
+
+def getJacobianJ(x, y):
+   n = x.shape[0]
+   h = 1./float(n)*np.ones(n-2)
+   innermaindiagfpp = jnp.concatenate((jnp.zeros(1), -2/h**2, jnp.zeros(1)))
+   innermaindiagy3 = jnp.concatenate((jnp.zeros(1), -6*y[1:-1]**2 + 6, jnp.zeros(1)))
+
+   innermaindiag = innermaindiagfpp + innermaindiagy3
+
+   jacinner = jnp.diag(innermaindiag)
+
+   innerlowerdiag = jnp.concatenate((1/h**2, jnp.zeros(1)))
+   jaclower = jnp.diag(innerlowerdiag, k=-1)
+
+   innerupperdiag = jnp.concatenate((jnp.zeros(1), 1/h**2))
+   jacupper = jnp.diag(innerupperdiag, k=+1)
+
+   jacbcdiag = jnp.concatenate((jnp.ones(1), jnp.zeros(n-2), jnp.ones(1)))
+   jacbc = jnp.diag(jacbcdiag)
+
+   jac = jacinner + jaclower + jacupper + jacbc
+
+   return jac
+
+getJacobianJit = jax.jit(getJacobianJ)
+
+def getFJ(x,y):
+   n = x.shape[0]
+   h = 1./float(n)*np.ones(n-2)
+   #h = x[2:] - x[1:-1]
+   F = jnp.zeros(n)
+
+   # f''
+   fpp = (y[2:] + y[:-2] - 2* y[1:-1])/h**2
+
+   # 2 x**3
+   fpx = 2*x[1:-1]**3
+
+   # -2 y**3
+   fpy3 = -2*y[1:-1]**3
+
+   # 6 y
+   fpy = 6*y[1:-1]
+
+   # bc
+   fp0 = jnp.array([y[0] - 2])
+   fp1 = jnp.array([y[-1] - 2.5])
+
+   fp = fpp+fpx+fpy3+fpy
+
+   F = jnp.concatenate((fp0, fp, fp1))
+   return F
+
+getFJit = jax.jit(getFJ)
+
+def newtonItJ(x, y, damping = 0.1):
+   F = getFJit(x,y)
+   jac = getJacobianJit(x,y)
+   delta = jnp.linalg.solve(jac, -F)
+   
+   return y+damping*delta
+
+newtonItJit = jax.jit(newtonItJ)
+
+# initial guess
+# y(x) = a*(x-1) + b
+# y(1) = 2 => b = 2
+# y(2) = 5/2 => a + 2 = 5/2 => a = 1/2
+def solveNewtonCond(sss):
+   tx, tsol, tn = sss
+   return jnp.linalg.norm(getFJ(tx, tsol)) > 3 #and tn < 500 
+
+def solveNewtonBody(sss):
+   tx, tsol, tn = sss
+   return (tx, newtonItJ(tx, tsol), tn+1)
+
+
+def solveNewtonJ(n=300, tol=1e-10):
+   x = jnp.ogrid[1:2:complex(0, n)]
+   sol0 = 0.5*(x-1) + 2
+   sol = sol0
+
+   val = (x, sol0, 0)
+   val = jax.lax.while_loop(solveNewtonCond, solveNewtonBody, val)
+
+   #for i in range(510):
+   #   val = solveNewtonBody(val)
+   #   tx, tsol, tn = val
+   #   #print (tn, solveNewtonCond(val), jnp.linalg.norm(getFJ(tx, tsol)))
+
+   tx, tsol, tn = val
+   return x, tsol
+
+
+solveNewtonJit = jax.jit(solveNewtonJ)
+```
+
+Test:
+
+```{python}
+n = 500
+x = jnp.ogrid[1:2:complex(0, n)]
+sol0 = 0.5*(x-1) + 2
+theosol = x + 1/x
+_ = getJacobianJit(x,sol0).block_until_ready()
+_ = getFJit(x,sol0).block_until_ready()
+_ = newtonItJit(x, sol0).block_until_ready()
+```
+
+Computing jax version:
+
+```{python}
+start = time.time()
+xjit, soljit = solveNewtonJ(500, 1e-10)
+end = time.time()
+print(f"JIT:{end - start}")
+```
+
+```{python}
+plt.plot(x, theosol)
+plt.plot(x, soljit)
+plt.plot(x, solnp)
+```
+
+```{python}
+jnp.linalg.norm(getF(x, solnp)), jnp.linalg.norm(getF(x, soljit)), jnp.linalg.norm(getFJ(x, solnp)), jnp.linalg.norm(getFJ(x, soljit))
+```
+
+```{python}
+#n = 150
+#x = jnp.ogrid[1:2:complex(0, n)]
+#sol0 = 0.5*(x-1) + 2
+#theosol = x + 1/x
+##jjit = getJacobianJit(x,sol0)
+##j0 = getJacobian(x,sol0)
+##j0, jjit
+#sol1 = newtonItJit(x, sol0)
+#solt = newtonIt(x, sol0)
+##sol1, solt
+#sol2 = newtonItJit(x, sol1)
+#sol3 = newtonItJit(x, sol2)
+#sol4 = newtonItJit(x, sol3)
+#sol5 = newtonItJit(x, sol4)
+#sol6 = newtonItJit(x, sol5)
+#sol6
+```
+

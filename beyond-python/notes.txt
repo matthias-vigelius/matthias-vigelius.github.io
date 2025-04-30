@@ -1,0 +1,15 @@
+* checkout JAX:
+https://docs.jax.dev/en/latest/quickstart.html
+
+* maybe pytorch
+
+
+Structure:
+* why python (low entry threshold, repl, notebooks)
+* numpy
+* python bytecode vs. numpy loops
+* maybe cython
+* jit (example java, sap hana db queries)
+* jax / pytorch
+* julia
+
