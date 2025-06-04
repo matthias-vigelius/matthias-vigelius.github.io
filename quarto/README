@@ -1,0 +1,20 @@
+A couple of non-standard python packages are required to render this presentation.
+They are best installed using `pip` in a virtual environment:
+
+```
+python -m venv
+source venv/bin/activate
+pip install jupyter sympy pythreejs ipython_genutils ipyvolume colorcet  sympy_plot_backends
+```
+
+Quarto can then be run within the virtual environment:
+
+```
+quarto render quarto.qmd
+```
+
+If quarto fails to start up, try
+
+```
+rm -rf /run/user/1000/jt/
+```

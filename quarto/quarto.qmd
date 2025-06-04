@@ -1,0 +1,533 @@
+---
+title: "Quarto and Sympy"
+format:
+  revealjs: 
+    slide-number: true
+    chalkboard: 
+      buttons: false
+    preview-links: auto
+    theme: beige
+    logo: images/fluxim.png
+    footer: <https://fluxim.com>
+resources:
+  - demo.pdf
+---
+
+# Quarto
+
+## (Pandoc) Markdown - Basics
+::: {.panel-tabset}
+
+## Markdown
+
+```
+The field equations connect the space time geometry to the mass energy tensor:
+
+$$
+G_{\mu \nu} = \kappa T_{\mu \nu},
+$$
+
+where the Einstein tensor is defined as
+
+$$
+G_{\mu \nu} = R_{\mu \nu} - R g_{\mu \nu}
+$$
+```
+
+## Rendered
+
+The field equations connect the space time geometry to the mass energy tensor:
+
+$$
+G_{\mu \nu} = \kappa T_{\mu \nu},
+$$
+
+where the Einstein tensor is defined as
+
+$$
+G_{\mu \nu} = R_{\mu \nu} - R g_{\mu \nu}
+$$
+:::
+
+## Markdown Basics - Tables
+
+::: {.panel-tabset}
+
+## Markdown
+
+```
+| Col1 | Col2 | Col3 |
+|------|------|------|
+| A    | B    | C    |
+| E    | F    | G    |
+| A    | G    | G    |
+
+: My Caption {#tbl-letters}
+
+See @tbl-letters.
+```
+
+## Rendered
+
+| Col1 | Col2 | Col3 |
+|------|------|------|
+| A    | B    | C    |
+| E    | F    | G    |
+| A    | G    | G    |
+
+: My Caption {#tbl-letters}
+
+See @tbl-letters.
+
+:::
+
+## Diagrams
+
+````
+```{mermaid}
+
+flowchart TD
+
+FR_A["Fresnel (A)"]
+FR_E["Fresnel (E)"]
+
+FR_A --> FA["Filter A"]
+FR_E -.-> FA
+
+FA --> AB["Absorption"]
+
+FR_A -.-> FE["Filter E"]
+FR_E --> FE
+
+FE --> EM["Emission"]
+AB --> EM
+```
+````
+
+## Diagrams
+```{mermaid}
+flowchart TD
+
+FR_A["Fresnel (A)"]
+FR_E["Fresnel (E)"]
+
+FR_A --> FA["Filter A"]
+FR_E -.-> FA
+
+FA --> AB["Absorption"]
+
+FR_A -.-> FE["Filter E"]
+FR_E --> FE
+
+FE --> EM["Emission"]
+AB --> EM
+```
+
+## Widgets - K3D
+
+```{python}
+import k3d
+import numpy as np
+from k3d.colormaps import paraview_color_maps
+
+def lorenz(x, y, z, s=10, r=28, b=8/3):
+    x_dot = s * (y - x)
+    y_dot = r * x - y - x * z
+    z_dot = x * y - b * z
+    return x_dot, y_dot, z_dot
+
+dt = 0.005
+step_cnt = 10000
+
+xs = np.empty((step_cnt + 1), dtype=np.float32)
+ys = np.empty((step_cnt + 1), dtype=np.float32)
+zs = np.empty((step_cnt + 1), dtype=np.float32)
+
+xs[0], ys[0], zs[0] = (0, 1, 1.05)
+
+for i in range(step_cnt):
+    x_dot, y_dot, z_dot = lorenz(xs[i], ys[i], zs[i])
+
+    xs[i + 1] = xs[i] + (x_dot * dt)
+    ys[i + 1] = ys[i] + (y_dot * dt)
+    zs[i + 1] = zs[i] + (z_dot * dt)
+
+plt_line = k3d.line(np.vstack([xs, ys, zs]).T,
+                    width=0.05,
+                    attribute=xs,
+                    color_map=paraview_color_maps.Hue_L60)
+
+plot = k3d.plot(background_color=0x1e1e1e,
+                label_color=0xf0f0f0,
+                grid_visible=False,
+                menu_visibility=False)
+plot += plt_line
+plot.display()
+
+plot.camera = [10.1646, -36.8108, -0.4144,
+               -1.0736, 1.5642, 25.2671,
+               0.9111, -0.0730, 0.4054]
+```
+
+## More features
+
+* lists
+* footnotes
+* bibliography
+* hyperlinks
+
+::: {.callout-note}
+For more information about basic (quarto) markdown, [see the guide](https://quarto.org/docs/authoring/markdown-basics.html).
+
+As an example, [see the setfos documentation](http://10.150.150.40/setfos-quarto/full/architecture/). 
+:::
+
+## Authoring quarto documents
+::: {.panel-tabset}
+
+## Command line
+
+Use your favorite editor to write the document. Then
+```
+quarto preview document.qmd
+```
+
+to get live preview and
+
+```
+quarto render document.qmd
+```
+
+to render (different targets are supported, e.g. html, pdf, ...).
+
+## VS Code
+
+![](images/python-vscode.png){fig-align="center"}
+
+## Quarto Visual editor
+![](images/visual-editing){fig-align="center" height="600"}
+:::
+
+# Sympy
+
+## Basics
+
+::: {.panel-tabset}
+
+## Markdown
+````
+We define our function $f(x)$ as
+
+```{{python}}
+import sympy as sp
+f = sp.Function("f")
+x, a, b, c = sp.symbols("x a b c")
+fdef = a*x**2 + b*x + c
+sp.Eq(f(x), fdef, evaluate=False)
+```
+
+Its integral is then
+```{{python}}
+sp.Eq(sp.Integral(f(x), x), sp.integrate(fdef, x), evaluate=False)
+```
+
+````
+
+## Rendered
+We define our function $f(x)$ as
+
+```{python}
+import sympy as sp
+f = sp.Function("f")
+x, a, b, c = sp.symbols("x a b c")
+fdef = a*x**2 + b*x + c
+sp.Eq(f(x), fdef, evaluate=False)
+```
+
+Its integral is then
+```{python}
+sp.Eq(sp.Integral(f(x), x), sp.integrate(fdef, x), evaluate=False)
+```
+
+:::
+
+## Surface plots
+```{python}
+from sympy import tan, cos, sin, pi, symbols
+from spb import *
+from sympy.vector import CoordSys3D, gradient
+
+u, v = symbols("u, v")
+N = CoordSys3D("N")
+i, j, k = N.base_vectors()
+xn, yn, zn = N.base_scalars()
+
+t = 0.35    # half-cone angle in radians
+expr = -xn**2 * tan(t)**2 + yn**2 + zn**2    # cone surface equation
+g = gradient(expr)
+n = g / g.magnitude()    # unit normal vector
+n1, n2 = 10, 20 # number of discretization points for the vector field
+
+# cone surface to discretize vector field (low numb of discret points)
+cone_discr = surface_parametric(
+   u / tan(t), u * cos(v), u * sin(v), (u, 0, 1), (v, 0 , 2*pi),
+   n1=n1, n2=n2)[0]
+graphics(
+   surface_parametric(
+      u / tan(t), u * cos(v), u * sin(v), (u, 0, 1), (v, 0 , 2*pi),
+      rendering_kw={"opacity": 1}, wireframe=True,
+      wf_n1=n1, wf_n2=n2, wf_rendering_kw={"width": 0.004}),
+   vector_field_3d(
+      n, range1=(xn, -5, 5), range2=(yn, -5, 5), range3=(zn, -5, 5),
+      use_cm=False, slice=cone_discr,
+      quiver_kw={"scale": 0.5, "pivot": "tail"}
+   ),
+   backend=KB, grid=False
+)
+```
+
+# Code generation I
+
+## Model definition
+::: {.panel-tabset}
+
+## Markdown
+````
+The Poisson equation is defined as
+```{{python}}
+st = {
+            'x': sp.Symbol("x"),
+            'n': sp.Function("n"),
+            'p': sp.Function("p"),
+            'lambda': sp.Symbol(r"\lambda"),
+            'psi': sp.Function(r"\psi"),
+            'Na': sp.Symbol("N_a"),
+            'Nd': sp.Symbol("N_d"),
+            'epsr': sp.Symbol(r"\epsilon_r"),
+     }
+
+x = st['x']
+totalChargeNoTraps = -st['p'](x) + st['n'](x) - st['Nd'] + st['Na']
+fpsi = st['epsr'] * st['lambda']**2 * sp.Derivative(sp.Derivative(st['psi'](x), x), x)  - totalChargeNoTraps
+sp.Eq(fpsi, 0, evaluate=False)
+```
+````
+
+## Rendered
+The Poisson equation is defined as
+```{python}
+st = {
+            'x': sp.Symbol("x"),
+            'n': sp.Function("n"),
+            'p': sp.Function("p"),
+            'lambda': sp.Symbol(r"\lambda"),
+            'psi': sp.Function(r"\psi"),
+            'Na': sp.Symbol("N_a"),
+            'Nd': sp.Symbol("N_d"),
+            'epsr': sp.Symbol(r"\epsilon_r"),
+     }
+
+x = st['x']
+totalChargeNoTraps = -st['p'](x) + st['n'](x) - st['Nd'] + st['Na']
+fpsi = st['epsr'] * st['lambda']**2 * sp.Derivative(sp.Derivative(st['psi'](x), x), x)  - totalChargeNoTraps
+sp.Eq(fpsi, 0, evaluate=False)
+```
+:::
+
+## Discretization
+::: {.panel-tabset}
+
+## Markdown
+````
+The discretized first-order Poisson equation is
+```{{python}}
+h = st['h']
+x = st['x']
+i = st['i']
+
+Eip12 = -(st['psi'][i+1] - st['psi'][i])/h
+Eim12 = -(st['psi'][i] - st['psi'][i-1])/h
+
+totalChargeNoTrapsi = -st['p'][i] + st['n'][i] - st['Nd'] + st['Na']
+ip1 = i + 1
+im1 = i - 1
+ip12 = i + sp.Rational(1,2)
+im12 = i - sp.Rational(1,2)
+
+fpois1i = -st['lambda']**2*st['epsr']*(st['E'][ip12]-st['E'][im12])/h-totalChargeNoTrapsi
+fpois2i = (-st['lambda']**2*st['epsr']*(Eip12-Eim12)/h-totalChargeNoTrapsi).expand()
+
+sp.Eq(fpois1i, 0, evaluate=False)
+```
+
+We can also directly write down the second-order equation
+```{{python}}
+sp.Eq(fpois2i, 0, evaluate=False)
+```
+````
+
+## Rendered
+The discretized first-order Poisson equation is
+```{python}
+st = {
+            'x': sp.Symbol("x"),
+            'h': sp.Symbol("h"),
+            'i': sp.Idx("i"),
+            'lambda': sp.Symbol(r"\lambda"),
+            'psi': sp.IndexedBase(r"\psi"),
+            'p': sp.IndexedBase(r"p"),
+            'n': sp.IndexedBase(r"n"),
+            'E': sp.IndexedBase(r"E"),
+            'Na': sp.Symbol("N_a"),
+            'Nd': sp.Symbol("N_d"),
+            'epsr': sp.Symbol(r"\epsilon_r"),
+     }
+h = st['h']
+x = st['x']
+i = st['i']
+
+Eip12 = -(st['psi'][i+1] - st['psi'][i])/h
+Eim12 = -(st['psi'][i] - st['psi'][i-1])/h
+
+totalChargeNoTrapsi = -st['p'][i] + st['n'][i] - st['Nd'] + st['Na']
+ip1 = i + 1
+im1 = i - 1
+ip12 = i + sp.Rational(1,2)
+im12 = i - sp.Rational(1,2)
+
+fpois1i = -st['lambda']**2*st['epsr']*(st['E'][ip12]-st['E'][im12])/h-totalChargeNoTrapsi
+fpois2i = (-st['lambda']**2*st['epsr']*(Eip12-Eim12)/h-totalChargeNoTrapsi).expand()
+
+sp.Eq(fpois1i, 0, evaluate=False)
+```
+
+We can also directly write down the second-order equation
+```{python}
+sp.Eq(fpois2i, 0, evaluate=False)
+```
+:::
+
+## Generate python code
+::: {.panel-tabset}
+
+## Markdown
+````
+Using a modified python code printer we can simply generate python code:
+
+```{{python}}
+import printer
+pc = printer.SetfosPythonCodePrinter().doprint(fpois2i)
+pc
+```
+
+We can also compile and run it
+```{{python}}
+import numpy as np
+localsDict = {}
+mySrc = "def get_Fpsi(N_a,N_d,epsilon_r,lam,h,psi,n,p):\n    return {}".format(pc)
+myMod = compile(mySrc, '', 'exec')
+exec(myMod,  localsDict)
+
+psi = np.ones(10)
+n = 2*np.ones(10)
+p = np.ones(10)
+localsDict['get_Fpsi'](0, 0, 1.0, 1.0, 1e-5, psi, n, p)
+```
+````
+
+## Rendered
+Using a modified python code printer we can simply generate python code:
+
+```{python}
+import printer
+pc = printer.SetfosPythonCodePrinter().doprint(fpois2i)
+pc
+```
+
+We can also compile and run it
+```{python}
+import numpy as np
+localsDict = {}
+mySrc = "def get_Fpsi(N_a,N_d,epsilon_r,lam,h,psi,n,p):\n    return {}".format(pc)
+myMod = compile(mySrc, '', 'exec')
+exec(myMod,  localsDict)
+
+psi = np.ones(10)
+n = 2*np.ones(10)
+p = np.ones(10)
+localsDict['get_Fpsi'](0, 0, 1.0, 1.0, 1e-5, psi, n, p)
+```
+:::
+
+
+## Compute derivatives for Jacobian
+::: {.panel-tabset}
+
+## Markdown
+````
+The Jacobian is easily computed:
+
+```{{python}}
+eq = fpois2i.diff(st['psi'][i])
+sp.Eq(sp.Derivative(sp.Function(r"F_{\psi,i}")(st['psi'][i]),st['psi'][i]), eq, evaluate=False)
+```
+````
+
+## Rendered
+The Jacobian is easily computed:
+
+```{python}
+eq = fpois2i.diff(st['psi'][i])
+sp.Eq(sp.Derivative(sp.Function(r"F_{\psi,i}")(st['psi'][i]),st['psi'][i]), eq, evaluate=False)
+```
+
+:::
+
+## Progress
+
+- [x] Basic DD model: doping + Langevin recombination
+- [x] Jacobian for basic DD model
+- [x] Discretized $F$ and $J$
+- [ ] Implement boundary conditions
+- [ ] Implement Newton solver
+- [ ] C++ code generation
+
+[You can try it out !](https://bitbucket.org/fluximag/matthias/src/master/newton_solver/)
+
+# Code generation II
+
+## Open XLA (Accelerated Linear Algebra)
+
+![](images/openxla.png){height="550" fig-align="center"}
+
+## Example of `StableHLO`
+```
+module @jit_getFJ attributes {jax.uses_shape_polymorphism = false, mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {
+  func.func public @main(%arg0: tensor<500xf32>, %arg1: tensor<500xf32>) -> (tensor<500xf32> {jax.result_info = "result"}) {
+    %cst = stablehlo.constant dense<2.500000e+00> : tensor<f32>
+    %c = stablehlo.constant dense<499> : tensor<i32>
+    %cst_0 = stablehlo.constant dense<6.000000e+00> : tensor<f32>
+    %cst_1 = stablehlo.constant dense<-2.000000e+00> : tensor<f32>
+    %cst_2 = stablehlo.constant dense<2.000000e+00> : tensor<f32>
+    %cst_3 = stablehlo.constant dense<4.000000e-06> : tensor<498xf32>
+    %0 = stablehlo.slice %arg1 [2:500] : (tensor<500xf32>) -> tensor<498xf32>
+    %1 = stablehlo.slice %arg1 [0:498] : (tensor<500xf32>) -> tensor<498xf32>
+    %2 = stablehlo.add %0, %1 : tensor<498xf32>
+    %3 = stablehlo.slice %arg1 [1:499] : (tensor<500xf32>) -> tensor<498xf32>
+    %4 = stablehlo.broadcast_in_dim %cst_2, dims = [] : (tensor<f32>) -> tensor<498xf32>
+    %5 = stablehlo.multiply %4, %3 : tensor<498xf32>
+    [...]
+    return %32 : tensor<500xf32>
+  }
+}
+```
+
+Numpy (jax) can generate `StableHLO` but we would still need to fill in the dimensions. Also, 64 bit support is only experimental.
+
+## Summary
+
+* Consolidate all documentation in quarto
+* Convert all documentation to sympy
+* Generate code from sympy (python/C++)
+* Just in time code generation using OpenXLA (or something else)
+
