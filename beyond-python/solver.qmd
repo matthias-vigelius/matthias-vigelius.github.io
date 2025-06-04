@@ -305,21 +305,32 @@ jnp.linalg.norm(getF(x, solnp)), jnp.linalg.norm(getF(x, soljit)), jnp.linalg.no
 ```
 
 ```{python}
-#n = 150
+#n = 500
 #x = jnp.ogrid[1:2:complex(0, n)]
 #sol0 = 0.5*(x-1) + 2
-#theosol = x + 1/x
-##jjit = getJacobianJit(x,sol0)
-##j0 = getJacobian(x,sol0)
-##j0, jjit
-#sol1 = newtonItJit(x, sol0)
-#solt = newtonIt(x, sol0)
-##sol1, solt
-#sol2 = newtonItJit(x, sol1)
-#sol3 = newtonItJit(x, sol2)
-#sol4 = newtonItJit(x, sol3)
-#sol5 = newtonItJit(x, sol4)
-#sol6 = newtonItJit(x, sol5)
-#sol6
+#solJit = sol0
+#solNp = sol0
+#for i in range(40):
+#   solJit = newtonItJit(x, solJit)
+#   solNp = newtonIt(x, solNp)
+#   agmax = jnp.argmax(jnp.abs(solNp - solJit))
+#   print(f"Step {i}: Jit: {solJit[agmax]}, Np:{solNp[agmax]}, agmax:{agmax}, Fjit: {np.linalg.norm(getF(x, solJit))}, FNp: {np.linalg.norm(getF(x, solNp))}")
+```
+
+```{python}
+from jax._src.interpreters import mlir as jax_mlir
+from jax._src.lib.mlir import ir
+
+# Returns prettyprint of StableHLO module without large constants
+def get_stablehlo_asm(module_str):
+  with jax_mlir.make_ir_context():
+    stablehlo_module = ir.Module.parse(module_str, context=jax_mlir.make_ir_context())
+    return stablehlo_module.operation.get_asm(large_elements_limit=20)
+
+import jax.export
+inputs = (x, sol0)
+input_shapes = [jax.ShapeDtypeStruct(input.shape, input.dtype) for input in inputs]
+stablehlo_add = jax.export.export(getFJit)(*input_shapes).mlir_module()
+print(get_stablehlo_asm(stablehlo_add))
 ```
 

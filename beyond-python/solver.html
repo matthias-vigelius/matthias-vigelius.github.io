@@ -64,61 +64,61 @@ ul.task-list li input[type="checkbox"] {
 
 <p>We study the <a href="https://services.math.duke.edu/~jtwong/math563-2020/lectures/Lec9-BVPs.pdf">equation</a></p>
 <div class="cell" data-execution_count="2">
-<div class="cell-output cell-output-display" data-execution_count="19">
+<div class="cell-output cell-output-display" data-execution_count="56">
 <p><span class="math inline">\(\displaystyle 2 x^{3} - 2 y^{3}{\left(x \right)} + 6 y{\left(x \right)} + \frac{d^{2}}{d x^{2}} y{\left(x \right)} = 0\)</span></p>
 </div>
 </div>
 <p>with boundary conditions <span class="math inline">\(y(1) = 2\)</span>, <span class="math inline">\(y(2) = 5/2\)</span>.</p>
 <p>The solution can be obtained analytically:</p>
 <div class="cell" data-execution_count="3">
-<div class="cell-output cell-output-display" data-execution_count="20">
+<div class="cell-output cell-output-display" data-execution_count="57">
 <p><span class="math inline">\(\displaystyle y{\left(x \right)} = x + \frac{1}{x}\)</span></p>
 </div>
 </div>
 <p>Test</p>
 <div class="cell" data-execution_count="4">
-<div class="cell-output cell-output-display" data-execution_count="21">
+<div class="cell-output cell-output-display" data-execution_count="58">
 <p><span class="math inline">\(\displaystyle 0\)</span></p>
 </div>
 </div>
 <p>The discretized equation is</p>
 <div class="cell" data-execution_count="5">
-<div class="cell-output cell-output-display" data-execution_count="22">
+<div class="cell-output cell-output-display" data-execution_count="59">
 <p><span class="math inline">\(\displaystyle 2 {x}_{i}^{3} - 2 {y}_{i}^{3} + 6 {y}_{i} + \frac{{y}_{i + 1} + {y}_{i - 1} - 2 {y}_{i}}{h^{2}} = 0\)</span></p>
 </div>
 </div>
 <p>with the boundary conditions</p>
 <div class="cell" data-execution_count="6">
-<div class="cell-output cell-output-display" data-execution_count="23">
+<div class="cell-output cell-output-display" data-execution_count="60">
 <p><span class="math inline">\(\displaystyle {y}_{0} - 2 = 0\)</span></p>
 </div>
 </div>
 <p>and</p>
 <div class="cell" data-execution_count="7">
-<div class="cell-output cell-output-display" data-execution_count="24">
+<div class="cell-output cell-output-display" data-execution_count="61">
 <p><span class="math inline">\(\displaystyle {y}_{N - 1} - \frac{5}{2} = 0\)</span></p>
 </div>
 </div>
 <p>The jacobian is</p>
 <div class="cell" data-execution_count="8">
-<div class="cell-output cell-output-display" data-execution_count="25">
+<div class="cell-output cell-output-display" data-execution_count="62">
 <p><span class="math inline">\(\displaystyle \frac{1}{h^{2}}\)</span></p>
 </div>
 </div>
 <div class="cell" data-execution_count="9">
-<div class="cell-output cell-output-display" data-execution_count="26">
+<div class="cell-output cell-output-display" data-execution_count="63">
 <p><span class="math inline">\(\displaystyle - 6 {y}_{i}^{2} + 6 - \frac{2}{h^{2}}\)</span></p>
 </div>
 </div>
 <div class="cell" data-execution_count="10">
-<div class="cell-output cell-output-display" data-execution_count="27">
+<div class="cell-output cell-output-display" data-execution_count="64">
 <p><span class="math inline">\(\displaystyle \frac{1}{h^{2}}\)</span></p>
 </div>
 </div>
 <p>Discretization in numpy.</p>
 <div class="cell" data-execution_count="11">
 <div class="cell-output cell-output-stdout">
-<pre><code>Numpy: 0.31975460052490234</code></pre>
+<pre><code>Numpy: 0.3255600929260254</code></pre>
 </div>
 </div>
 <section id="jax-version" class="level1">
@@ -127,7 +127,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Computing jax version:</p>
 <div class="cell" data-execution_count="14">
 <div class="cell-output cell-output-stdout">
-<pre><code>JIT:0.08489632606506348</code></pre>
+<pre><code>JIT:0.08923578262329102</code></pre>
 </div>
 </div>
 <div class="cell" data-execution_count="15">
@@ -136,11 +136,60 @@ ul.task-list li input[type="checkbox"] {
 </div>
 </div>
 <div class="cell" data-execution_count="16">
-<div class="cell-output cell-output-display" data-execution_count="33">
+<div class="cell-output cell-output-display" data-execution_count="70">
 <pre><code>(Array(2.803668, dtype=float32),
  Array(2.9785662, dtype=float32),
  Array(2.8036675, dtype=float32),
  Array(2.9785662, dtype=float32))</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="cell-output cell-output-stdout">
+<pre><code>module @jit_getFJ attributes {jax.uses_shape_polymorphism = false, mhlo.num_partitions = 1 : i32, mhlo.num_replicas = 1 : i32} {
+  func.func public @main(%arg0: tensor&lt;500xf32&gt;, %arg1: tensor&lt;500xf32&gt;) -&gt; (tensor&lt;500xf32&gt; {jax.result_info = "result"}) {
+    %cst = stablehlo.constant dense&lt;2.500000e+00&gt; : tensor&lt;f32&gt;
+    %c = stablehlo.constant dense&lt;499&gt; : tensor&lt;i32&gt;
+    %cst_0 = stablehlo.constant dense&lt;6.000000e+00&gt; : tensor&lt;f32&gt;
+    %cst_1 = stablehlo.constant dense&lt;-2.000000e+00&gt; : tensor&lt;f32&gt;
+    %cst_2 = stablehlo.constant dense&lt;2.000000e+00&gt; : tensor&lt;f32&gt;
+    %cst_3 = stablehlo.constant dense&lt;4.000000e-06&gt; : tensor&lt;498xf32&gt;
+    %0 = stablehlo.slice %arg1 [2:500] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %1 = stablehlo.slice %arg1 [0:498] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %2 = stablehlo.add %0, %1 : tensor&lt;498xf32&gt;
+    %3 = stablehlo.slice %arg1 [1:499] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %4 = stablehlo.broadcast_in_dim %cst_2, dims = [] : (tensor&lt;f32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %5 = stablehlo.multiply %4, %3 : tensor&lt;498xf32&gt;
+    %6 = stablehlo.subtract %2, %5 : tensor&lt;498xf32&gt;
+    %7 = stablehlo.divide %6, %cst_3 : tensor&lt;498xf32&gt;
+    %8 = stablehlo.slice %arg0 [1:499] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %9 = stablehlo.multiply %8, %8 : tensor&lt;498xf32&gt;
+    %10 = stablehlo.multiply %9, %8 : tensor&lt;498xf32&gt;
+    %11 = stablehlo.broadcast_in_dim %cst_2, dims = [] : (tensor&lt;f32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %12 = stablehlo.multiply %11, %10 : tensor&lt;498xf32&gt;
+    %13 = stablehlo.slice %arg1 [1:499] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %14 = stablehlo.multiply %13, %13 : tensor&lt;498xf32&gt;
+    %15 = stablehlo.multiply %14, %13 : tensor&lt;498xf32&gt;
+    %16 = stablehlo.broadcast_in_dim %cst_1, dims = [] : (tensor&lt;f32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %17 = stablehlo.multiply %16, %15 : tensor&lt;498xf32&gt;
+    %18 = stablehlo.slice %arg1 [1:499] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %19 = stablehlo.broadcast_in_dim %cst_0, dims = [] : (tensor&lt;f32&gt;) -&gt; tensor&lt;498xf32&gt;
+    %20 = stablehlo.multiply %19, %18 : tensor&lt;498xf32&gt;
+    %21 = stablehlo.slice %arg1 [0:1] : (tensor&lt;500xf32&gt;) -&gt; tensor&lt;1xf32&gt;
+    %22 = stablehlo.reshape %21 : (tensor&lt;1xf32&gt;) -&gt; tensor&lt;f32&gt;
+    %23 = stablehlo.subtract %22, %cst_2 : tensor&lt;f32&gt;
+    %24 = stablehlo.broadcast_in_dim %23, dims = [] : (tensor&lt;f32&gt;) -&gt; tensor&lt;1xf32&gt;
+    %25 = stablehlo.dynamic_slice %arg1, %c, sizes = [1] : (tensor&lt;500xf32&gt;, tensor&lt;i32&gt;) -&gt; tensor&lt;1xf32&gt;
+    %26 = stablehlo.reshape %25 : (tensor&lt;1xf32&gt;) -&gt; tensor&lt;f32&gt;
+    %27 = stablehlo.subtract %26, %cst : tensor&lt;f32&gt;
+    %28 = stablehlo.broadcast_in_dim %27, dims = [] : (tensor&lt;f32&gt;) -&gt; tensor&lt;1xf32&gt;
+    %29 = stablehlo.add %7, %12 : tensor&lt;498xf32&gt;
+    %30 = stablehlo.add %29, %17 : tensor&lt;498xf32&gt;
+    %31 = stablehlo.add %30, %20 : tensor&lt;498xf32&gt;
+    %32 = stablehlo.concatenate %24, %31, %28, dim = 0 : (tensor&lt;1xf32&gt;, tensor&lt;498xf32&gt;, tensor&lt;1xf32&gt;) -&gt; tensor&lt;500xf32&gt;
+    return %32 : tensor&lt;500xf32&gt;
+  }
+}
+</code></pre>
 </div>
 </div>
 </section>
