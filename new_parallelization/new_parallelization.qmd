@@ -18,32 +18,92 @@ diagram:
   engine:
     tikz:
       header-includes: |
-          \usetikzlibrary{shapes.geometric, arrows, background}
+          \usetikzlibrary{shapes.geometric, arrows, backgrounds, positioning}
 
 resources:
   - demo.pdf
 ---
 
-# Dependencies in sweeps
-
-## Wavefront pattern
+## Implementation - overview
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
-\tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
-\tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
-\tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\scalebox{1.5}{
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{simple} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+\node (TaskOrchestrator) [simple] {\begin{tabular}{c} \texttt{TaskOrchestrator} \\ \textbullet\ Handles graph \\ \textbullet\ runs tasks \end{tabular}};
+\node (AbstractTask) [simple, right of=TaskOrchestrator, xshift=5cm] {\begin{tabular}{c} \texttt{AbstractTask} \\ \textbullet\ Manages properties \\ \textbullet\ runs payload \end{tabular}};
+\node (Sweeper) [simple, right of=AbstractTask, xshift=5cm] {\begin{tabular}{c} \texttt{Sweeper} \\ \textbullet\ Creates abstract graph\end{tabular}};
+\node (TaskResult) [simple, below of=AbstractTask, yshift=-2.5cm] {\begin{tabular}{c} \texttt{AbstractTaskResult} \\ \textbullet\ Represents coupling\end{tabular}};
 
-\node (scata) [queue] {Scattering A}
-\node (scatb) [queue, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [queue, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [queue, right of=fresnel1, xshift=3cm] {Fresnel 2}
 
-\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:2} \end{tabular}}
-\node (netrada2) [queue, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:2} \end{tabular}}
-\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}}
+\draw [arrow] (TaskOrchestrator) -- (AbstractTask);
+\draw [arrow] (Sweeper) -- (AbstractTask);
+\draw [arrow] (AbstractTask) -- (TaskResult);
+\end{tikzpicture}
+}
+```
+
+## Task Orchestrator - Abstract graph
+
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{simple} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+\node (Scattering) [simple] {Scattering};
+\node (Fresnel) [simple, right of=Scattering, xshift=3cm] {Fresnel};
+\node (NetRadiation) [simple, below of=Scattering, yshift=-2.5cm, xshift=1.5cm] {NetRadiation};
+\node (ScatteringPP) [simple, below of=NetRadiation, yshift=-2.5cm] {Scattering PP};
+
+\draw [arrow] (Scattering) -- (NetRadiation);
+\draw [arrow] (Fresnel) -- (NetRadiation);
+\draw [arrow] (NetRadiation) -- (ScatteringPP);
+\end{tikzpicture}
+```
+
+## Task Orchestrator - Instantiation
+
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{simple} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+\node (scata) [simple] {Scattering A};
+\node (scatb) [simple, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [simple, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [simple, right of=fresnel1, xshift=3cm] {Fresnel 2};
+
+\node (NetRadiation) [simple, below of=scatb, yshift=-2.5cm, xshift=1.5cm] {NetRadiation};
+\node (ScatteringPP) [simple, below of=NetRadiation, yshift=-2.5cm] {Scattering PP};
+
+\draw [arrow] (scata) -- (NetRadiation);
+\draw [arrow] (scatb) -- (NetRadiation);
+\draw [arrow] (fresnel1) -- (NetRadiation);
+\draw [arrow] (fresnel2) -- (NetRadiation);
+\draw [arrow] (NetRadiation) -- (ScatteringPP);
+\end{tikzpicture}
+```
+
+## Task Orchestrator - Instantiation
+
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{simple} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+\node (scata) [simple] {Scattering A};
+\node (scatb) [simple, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [simple, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [simple, right of=fresnel1, xshift=3cm] {Fresnel 2};
+
+\node (netrada1) [simple, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netrada2) [simple, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb1) [simple, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb2) [simple, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}};
+
+\node (ScatteringPP) [simple, below of=netrada2, yshift=-2.5cm, xshift=1.5cm] {Scattering PP};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -54,8 +114,83 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}}
+\draw [arrow] (netrada1) -- (ScatteringPP);
+\draw [arrow] (netrada2) -- (ScatteringPP);
+\draw [arrow] (netradb1) -- (ScatteringPP);
+\draw [arrow] (netradb2) -- (ScatteringPP);
+\end{tikzpicture}
+```
+
+## Task Orchestrator - Instantiation
+
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{simple} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+\node (scata) [simple] {Scattering A};
+\node (scatb) [simple, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [simple, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [simple, right of=fresnel1, xshift=3cm] {Fresnel 2};
+
+\node (netrada1) [simple, below of=scata, yshift=-1.5cm] {Net Rad A1};
+\node (netrada2) [simple, below of=scatb, yshift=-1.5cm] {Net Rad A2};
+\node (netradb1) [simple, below of=fresnel1, yshift=-1.5cm] {Net Rad B1};
+\node (netradb2) [simple, below of=fresnel2, yshift=-1.5cm] {Net Rad B2};
+
+\node (scatppa1b1) [simple, below of=netrada1, yshift=-1.5cm, xshift=2cm] {Scattering PP A1B1};
+\node (scatppa2b2) [simple, below of=netradb1, yshift=-1.5cm, xshift=2cm] {Scattering PP A2B2};
+
+
+\draw [arrow] (scata) -- (netrada1);
+\draw [arrow] (scata) -- (netrada2);
+\draw [arrow] (scatb) -- (netradb1);
+\draw [arrow] (scatb) -- (netradb2);
+\draw [arrow] (fresnel1) -- (netrada1);
+\draw [arrow] (fresnel1) -- (netradb1);
+\draw [arrow] (fresnel2) -- (netrada2);
+\draw [arrow] (fresnel2) -- (netradb2);
+
+\draw [arrow] (netrada1) -- (scatppa1b1);
+\draw [arrow] (netradb1) -- (scatppa1b1);
+\draw [arrow] (netrada2) -- (scatppa2b2);
+\draw [arrow] (netradb2) -- (scatppa2b2);
+\end{tikzpicture}
+```
+
+Scattering post-processing collects over angle results!
+
+## Wavefront pattern
+
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
+\tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+
+\node (scata) [queue] {Scattering A};
+\node (scatb) [queue, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [queue, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [queue, right of=fresnel1, xshift=3cm] {Fresnel 2};
+
+\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netrada2) [queue, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}};
+
+\draw [arrow] (scata) -- (netrada1);
+\draw [arrow] (scata) -- (netrada2);
+\draw [arrow] (scatb) -- (netradb1);
+\draw [arrow] (scatb) -- (netradb2);
+\draw [arrow] (fresnel1) -- (netrada1);
+\draw [arrow] (fresnel1) -- (netradb1);
+\draw [arrow] (fresnel2) -- (netrada2);
+\draw [arrow] (fresnel2) -- (netradb2);
+
+\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -68,21 +203,22 @@ resources:
 ## Wavefront pattern
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
 \tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
 \tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
 \tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
 
-\node (scata) [run] {Scattering A}
-\node (scatb) [run, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [run, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [run, right of=fresnel1, xshift=3cm] {Fresnel 2}
+\node (scata) [run] {Scattering A};
+\node (scatb) [run, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [run, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [run, right of=fresnel1, xshift=3cm] {Fresnel 2};
 
-\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:2} \end{tabular}}
-\node (netrada2) [queue, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:2} \end{tabular}}
-\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}}
+\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netrada2) [queue, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -93,8 +229,8 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}}
+\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -107,21 +243,22 @@ resources:
 ## Wavefront pattern
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
 \tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
 \tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
 \tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
 
-\node (scata) [finished] {Scattering A}
-\node (scatb) [run, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [run, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [run, right of=fresnel1, xshift=3cm] {Fresnel 2}
+\node (scata) [finished] {Scattering A};
+\node (scatb) [run, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [run, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [run, right of=fresnel1, xshift=3cm] {Fresnel 2};
 
-\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:1} \end{tabular}}
-\node (netrada2) [queue, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:1} \end{tabular}}
-\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}}
+\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:1} \end{tabular}};
+\node (netrada2) [queue, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:1} \end{tabular}};
+\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -132,8 +269,8 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}}
+\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -146,21 +283,22 @@ resources:
 ## Wavefront pattern
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
 \tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
 \tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
 \tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
 
-\node (scata) [finished] {Scattering A}
-\node (scatb) [run, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [run, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2}
+\node (scata) [finished] {Scattering A};
+\node (scatb) [run, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [run, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2};
 
-\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:1} \end{tabular}}
-\node (netrada2) [run, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}}
+\node (netrada1) [queue, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:1} \end{tabular}};
+\node (netrada2) [run, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb1) [queue, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (netradb2) [queue, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -171,8 +309,8 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}}
+\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -185,21 +323,22 @@ resources:
 ## Wavefront pattern
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
 \tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
 \tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
 \tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
 
-\node (scata) [finished] {Scattering A}
-\node (scatb) [finished, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [finished, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2}
+\node (scata) [finished] {Scattering A};
+\node (scatb) [finished, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [finished, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2};
 
-\node (netrada1) [run, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:0} \end{tabular}}
-\node (netrada2) [finished, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb1) [run, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb2) [run, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:0} \end{tabular}}
+\node (netrada1) [run, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:0} \end{tabular}};
+\node (netrada2) [finished, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb1) [run, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb2) [run, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:0} \end{tabular}};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -210,8 +349,8 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}}
-\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:1} \end{tabular}}
+\node (scatppa1b1) [queue, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (scatppa2b2) [queue, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:1} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -224,21 +363,22 @@ resources:
 ## Wavefront pattern
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
 \tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
 \tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
 \tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
 
-\node (scata) [finished] {Scattering A}
-\node (scatb) [finished, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [finished, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2}
+\node (scata) [finished] {Scattering A};
+\node (scatb) [finished, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [finished, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2};
 
-\node (netrada1) [finished, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:0} \end{tabular}}
-\node (netrada2) [finished, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb1) [finished, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb2) [finished, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:0} \end{tabular}}
+\node (netrada1) [finished, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:0} \end{tabular}};
+\node (netrada2) [finished, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb1) [finished, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb2) [finished, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:0} \end{tabular}};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -249,8 +389,8 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [run, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:0} \end{tabular}}
-\node (scatppa2b2) [run, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:0} \end{tabular}}
+\node (scatppa1b1) [run, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:0} \end{tabular}};
+\node (scatppa2b2) [run, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:0} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -263,21 +403,22 @@ resources:
 ## Wavefront pattern
 
 ``` tikz
-\begin{tikzpicture}[background rectangle/.style={fill=red!45}, show background rectangle]
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
 \tikzstyle{queue} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
 \tikzstyle{run} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!70]
 \tikzstyle{finished} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!70]
-\tikzstyle{arrow} = [thick,->,>=stealth, draw=blue!20]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
 
-\node (scata) [finished] {Scattering A}
-\node (scatb) [finished, right of=scata, xshift=3cm] {Scattering B}
-\node (fresnel1) [finished, right of=scatb, xshift=3cm] {Fresnel 1}
-\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2}
+\node (scata) [finished] {Scattering A};
+\node (scatb) [finished, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [finished, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [finished, right of=fresnel1, xshift=3cm] {Fresnel 2};
 
-\node (netrada1) [finished, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:0} \end{tabular}}
-\node (netrada2) [finished, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb1) [finished, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:0} \end{tabular}}
-\node (netradb2) [finished, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:0} \end{tabular}}
+\node (netrada1) [finished, below of=scata, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A1 \\ \texttt{incoming:0} \end{tabular}};
+\node (netrada2) [finished, below of=scatb, yshift=-1.5cm] {\begin{tabular}{c} Net Rad A2 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb1) [finished, below of=fresnel1, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B1 \\ \texttt{incoming:0} \end{tabular}};
+\node (netradb2) [finished, below of=fresnel2, yshift=-1.5cm] {\begin{tabular}{c} Net Rad B2 \\ \texttt{incoming:0} \end{tabular}};
 
 \draw [arrow] (scata) -- (netrada1);
 \draw [arrow] (scata) -- (netrada2);
@@ -288,8 +429,8 @@ resources:
 \draw [arrow] (fresnel2) -- (netrada2);
 \draw [arrow] (fresnel2) -- (netradb2);
 
-\node (scatppa1b1) [finished, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:0} \end{tabular}}
-\node (scatppa2b2) [finished, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:0} \end{tabular}}
+\node (scatppa1b1) [finished, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:0} \end{tabular}};
+\node (scatppa2b2) [finished, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:0} \end{tabular}};
 
 \draw [arrow] (netrada1) -- (scatppa1b1);
 \draw [arrow] (netradb1) -- (scatppa1b1);
@@ -300,4 +441,63 @@ resources:
 ```
 
 Lock-free: a finished node checks if it can start its downstream nodes.
+
+## Implementation details: Equivalence sets
+
+:::: {.columns}
+
+::: {.column width="50%"}
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{queue} = [rectangle, rounded corners, minimum width=1.5cm, minimum height=1cm,text centered, draw=black, fill=yellow]
+
+\node (n000) [queue] {$(0,0,0)$};
+\node (n001) [queue, right=of n000] {$(0,0,1)$};
+\node (n002) [queue, right=of n001] {$(0,0,2)$};
+\node (n003) [queue, right=of n002] {$(0,0,3)$};
+
+\node (n010) [queue, below=of n000] {$(0,1,0)$};
+\node (n011) [queue, right=of n010] {$(0,1,1)$};
+\node (n012) [queue, right=of n011] {$(0,1,2)$};
+\node (n013) [queue, right=of n012] {$(0,1,3)$};
+
+\node (n020) [queue, below=of n010] {$(0,2,0)$};
+\node (n021) [queue, right=of n020] {$(0,2,1)$};
+\node (n022) [queue, right=of n021] {$(0,2,2)$};
+\node (n023) [queue, right=of n022] {$(0,2,3)$};
+
+\node (n100) [queue, below=of n020] {$(1,0,0)$};
+\node (n101) [queue, right=of n100] {$(1,0,1)$};
+\node (n102) [queue, right=of n101] {$(1,0,2)$};
+\node (n103) [queue, right=of n102] {$(1,0,3)$};
+
+\node (n110) [queue, below=of n100] {$(1,1,0)$};
+\node (n111) [queue, right=of n110] {$(1,1,1)$};
+\node (n112) [queue, right=of n111] {$(1,1,2)$};
+\node (n113) [queue, right=of n112] {$(1,1,3)$};
+
+\node (n120) [queue, below=of n110] {$(1,2,0)$};
+\node (n121) [queue, right=of n120] {$(1,2,1)$};
+\node (n122) [queue, right=of n121] {$(1,2,2)$};
+\node (n123) [queue, right=of n122] {$(1,2,3)$};
+\end{tikzpicture}
+```
+:::
+
+::: {.column width="50%"}
+$$
+\begin{aligned}
+i_a &= \lfloor k / (n_b  n_c) \rfloor \\
+j_a &= k \bmod (n_b  n_c) \\
+i_b &= \lfloor j_a / n_c       \rfloor\\
+j_b &= j_a \bmod n_c \\
+i_c &= j_b / 1
+\end{aligned}
+$$
+:::
+
+::::
+
+
 

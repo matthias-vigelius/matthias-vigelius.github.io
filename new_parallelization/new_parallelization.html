@@ -135,41 +135,74 @@
 </div>
 
 </section>
-<section>
-<section id="dependencies-in-sweeps" class="title-slide slide level1 center">
-<h1>Dependencies in sweeps</h1>
-
+<section id="implementation---overview" class="slide level2">
+<h2>Implementation - overview</h2>
+<img data-src="new_parallelization_files/mediabag/cd390b97e6246038d41bafbfe4f5bf2925b0937a.svg">
+</section>
+<section id="task-orchestrator---abstract-graph" class="slide level2">
+<h2>Task Orchestrator - Abstract graph</h2>
+<img data-src="new_parallelization_files/mediabag/92897e8933cd6f6921dce32431abb5fdffe02683.svg">
+</section>
+<section id="task-orchestrator---instantiation" class="slide level2">
+<h2>Task Orchestrator - Instantiation</h2>
+<img data-src="new_parallelization_files/mediabag/476e63b2a3cdd04d8167b480e4cba22d26c33d09.svg">
+</section>
+<section id="task-orchestrator---instantiation-1" class="slide level2">
+<h2>Task Orchestrator - Instantiation</h2>
+<img data-src="new_parallelization_files/mediabag/13736bffb425fa75453e712cba4495034d483f16.svg">
+</section>
+<section id="task-orchestrator---instantiation-2" class="slide level2">
+<h2>Task Orchestrator - Instantiation</h2>
+<img data-src="new_parallelization_files/mediabag/20be112b3c682035e0cf7b28f418a97cbb60b5f9.svg">
+<p>Scattering post-processing collects over angle results!</p>
 </section>
 <section id="wavefront-pattern" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/1093d8c3733364399136121408e1e5cc3c2e6f0e.svg">
+<img data-src="new_parallelization_files/mediabag/e742b745daaef1b169bde21394853221507b3902.svg">
 </section>
 <section id="wavefront-pattern-1" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/5e676624a213f251476357ec9df5ef08bb306e3c.svg">
+<img data-src="new_parallelization_files/mediabag/1070d818b109b8441cda6314f8bf182e3564e457.svg">
 </section>
 <section id="wavefront-pattern-2" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/33e374f02c5d7c33a9b629db1c36e0096f25d92a.svg">
+<img data-src="new_parallelization_files/mediabag/480e4691a91d47ad73497b9c2274202d821470ed.svg">
 </section>
 <section id="wavefront-pattern-3" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/a1c0af9c3afe38367561b4ce8301764763ec8e37.svg">
+<img data-src="new_parallelization_files/mediabag/df3df6491d7714ff5a14d0d07e1fdecfd28f7cf7.svg">
 </section>
 <section id="wavefront-pattern-4" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/915913775781cbe4f596f180e53acfb9683e56c0.svg">
+<img data-src="new_parallelization_files/mediabag/3244b0c184a2a1604d7a744151571035a2867f43.svg">
 </section>
 <section id="wavefront-pattern-5" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/6f062d21fc138c240fdf8feb4de78901a23d61da.svg">
+<img data-src="new_parallelization_files/mediabag/0ceb1d79fad55ba7248d48c237a58b1c055d6367.svg">
 </section>
 <section id="wavefront-pattern-6" class="slide level2">
 <h2>Wavefront pattern</h2>
-<img data-src="new_parallelization_files/mediabag/3aaac4a03ee2d27ad4cc38a779a46117864a2a81.svg">
+<img data-src="new_parallelization_files/mediabag/4178af3f9e0a08d850f5fdb536bfa3f938ff1d54.svg">
 <p>Lock-free: a finished node checks if it can start its downstream nodes.</p>
+</section>
+<section id="implementation-details-equivalence-sets" class="slide level2">
+<h2>Implementation details: Equivalence sets</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<img data-src="new_parallelization_files/mediabag/4aa3f3d86e22b105f2d675038604b52958c98cd5.svg">
+</div><div class="column" style="width:50%;">
+<p><span class="math display">\[
+\begin{aligned}
+i_a &amp;= \lfloor k / (n_b  n_c) \rfloor \\
+j_a &amp;= k \bmod (n_b  n_c) \\
+i_b &amp;= \lfloor j_a / n_c       \rfloor\\
+j_b &amp;= j_a \bmod n_c \\
+i_c &amp;= j_b / 1
+\end{aligned}
+\]</span></p>
+</div></div>
 
-</section></section>
+</section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <p><img src="images/fluxim.png" class="slide-logo"></p>
