@@ -442,7 +442,7 @@ Scattering post-processing collects over angle results!
 
 Lock-free: a finished node checks if it can start its downstream nodes.
 
-## Implementation details: Equivalence sets
+## Task indices
 
 :::: {.columns}
 
@@ -450,37 +450,37 @@ Lock-free: a finished node checks if it can start its downstream nodes.
 ``` tikz
 \definecolor{cosmiclatte}{HTML}{FFF8E7}
 \begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
-\tikzstyle{queue} = [rectangle, rounded corners, minimum width=1.5cm, minimum height=1cm,text centered, draw=black, fill=yellow]
+\tikzstyle{queue} = [rectangle, minimum width=1.5cm, minimum height=1cm,text centered, draw=black, fill=yellow]
 
 \node (n000) [queue] {$(0,0,0)$};
-\node (n001) [queue, right=of n000] {$(0,0,1)$};
-\node (n002) [queue, right=of n001] {$(0,0,2)$};
-\node (n003) [queue, right=of n002] {$(0,0,3)$};
+\node (n001) [queue, right=0mm of n000] {$(0,0,1)$};
+\node (n002) [queue, right=0mm of n001] {$(0,0,2)$};
+\node (n003) [queue, right=0mm of n002] {$(0,0,3)$};
 
-\node (n010) [queue, below=of n000] {$(0,1,0)$};
-\node (n011) [queue, right=of n010] {$(0,1,1)$};
-\node (n012) [queue, right=of n011] {$(0,1,2)$};
-\node (n013) [queue, right=of n012] {$(0,1,3)$};
+\node (n010) [queue, below=0mm of n000] {$(0,1,0)$};
+\node (n011) [queue, right=0mm of n010] {$(0,1,1)$};
+\node (n012) [queue, right=0mm of n011] {$(0,1,2)$};
+\node (n013) [queue, right=0mm of n012] {$(0,1,3)$};
 
-\node (n020) [queue, below=of n010] {$(0,2,0)$};
-\node (n021) [queue, right=of n020] {$(0,2,1)$};
-\node (n022) [queue, right=of n021] {$(0,2,2)$};
-\node (n023) [queue, right=of n022] {$(0,2,3)$};
+\node (n020) [queue, below=0mm of n010] {$(0,2,0)$};
+\node (n021) [queue, right=0mm of n020] {$(0,2,1)$};
+\node (n022) [queue, right=0mm of n021] {$(0,2,2)$};
+\node (n023) [queue, right=0mm of n022] {$(0,2,3)$};
 
 \node (n100) [queue, below=of n020] {$(1,0,0)$};
-\node (n101) [queue, right=of n100] {$(1,0,1)$};
-\node (n102) [queue, right=of n101] {$(1,0,2)$};
-\node (n103) [queue, right=of n102] {$(1,0,3)$};
+\node (n101) [queue, right=0mm of n100] {$(1,0,1)$};
+\node (n102) [queue, right=0mm of n101] {$(1,0,2)$};
+\node (n103) [queue, right=0mm of n102] {$(1,0,3)$};
 
-\node (n110) [queue, below=of n100] {$(1,1,0)$};
-\node (n111) [queue, right=of n110] {$(1,1,1)$};
-\node (n112) [queue, right=of n111] {$(1,1,2)$};
-\node (n113) [queue, right=of n112] {$(1,1,3)$};
+\node (n110) [queue, below=0mm of n100] {$(1,1,0)$};
+\node (n111) [queue, right=0mm of n110] {$(1,1,1)$};
+\node (n112) [queue, right=0mm of n111] {$(1,1,2)$};
+\node (n113) [queue, right=0mm of n112] {$(1,1,3)$};
 
-\node (n120) [queue, below=of n110] {$(1,2,0)$};
-\node (n121) [queue, right=of n120] {$(1,2,1)$};
-\node (n122) [queue, right=of n121] {$(1,2,2)$};
-\node (n123) [queue, right=of n122] {$(1,2,3)$};
+\node (n120) [queue, below=0mm of n110] {$(1,2,0)$};
+\node (n121) [queue, right=0mm of n120] {$(1,2,1)$};
+\node (n122) [queue, right=0mm of n121] {$(1,2,2)$};
+\node (n123) [queue, right=0mm of n122] {$(1,2,3)$};
 \end{tikzpicture}
 ```
 :::
@@ -500,4 +500,199 @@ $$
 ::::
 
 
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{task0} = [rectangle, minimum width=1.5cm, minimum height=1cm,text centered, draw=black, fill=yellow]
+\tikzstyle{task1} = [rectangle, minimum width=1.5cm, minimum height=1cm,text centered, draw=black, fill=blue!50]
 
+\node (n000) [task0] {$(0,0,0)$};
+\node (n001) [task0, right=0mm of n000] {$(\ldots)$};
+\node (n002) [task0, right=0mm of n001] {$(0,0,3)$};
+\node (n003) [task0, right=0mm of n002] {$(0,1,0)$};
+\node (n004) [task0, right=0mm of n003] {$(\ldots)$};
+\node (n005) [task0, right=0mm of n004] {$(0,1,3)$};
+\node (n006) [task0, right=0mm of n005] {$(1,1,0)$};
+\node (n007) [task0, right=0mm of n006] {$(\ldots)$};
+\node (n008) [task0, right=0mm of n007] {$(1,1,3)$};
+\node (p000) [task1, right=0mm of n008] {$(0,0,0)$};
+\node (p001) [task1, right=0mm of p000] {$(\ldots)$};
+\node (p002) [task1, right=0mm of p001] {$(0,0,3)$};
+\node (p003) [task1, right=0mm of p002] {$(0,1,0)$};
+\node (p004) [task1, right=0mm of p003] {$(\ldots)$};
+\node (p005) [task1, right=0mm of p004] {$(0,1,3)$};
+\node (p006) [task1, right=0mm of p005] {$(1,1,0)$};
+\node (p007) [task1, right=0mm of p006] {$(\ldots)$};
+\node (p008) [task1, right=0mm of p007] {$(1,1,3)$};
+\end{tikzpicture}
+```
+
+Task vector: contiguous "row major" layout with index $(\mathtt{taskId}, i_0, \ldots, i_n)$.
+
+## Graph structure - Adjacency matrix
+:::: {.columns}
+
+::: {.column width="50%"}
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{scat} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!50]
+\tikzstyle{fresnel} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!50]
+\tikzstyle{nr} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!50]
+\tikzstyle{scatpp} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=blue!50]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+
+\node (scata) [scat] {Scattering A};
+\node (scatb) [scat, right of=scata, xshift=3cm] {Scattering B};
+\node (fresnel1) [fresnel, right of=scatb, xshift=3cm] {Fresnel 1};
+\node (fresnel2) [fresnel, right of=fresnel1, xshift=3cm] {Fresnel 2};
+
+\node (netrada1) [nr, below of=scata, yshift=-1.5cm] {Net Rad A1};
+\node (netrada2) [nr, below of=scatb, yshift=-1.5cm] {Net Rad A2};
+\node (netradb1) [nr, below of=fresnel1, yshift=-1.5cm] {Net Rad B1};
+\node (netradb2) [nr, below of=fresnel2, yshift=-1.5cm] {Net Rad B2};
+
+\draw [arrow] (scata) -- (netrada1);
+\draw [arrow] (scata) -- (netrada2);
+\draw [arrow] (scatb) -- (netradb1);
+\draw [arrow] (scatb) -- (netradb2);
+\draw [arrow] (fresnel1) -- (netrada1);
+\draw [arrow] (fresnel1) -- (netradb1);
+\draw [arrow] (fresnel2) -- (netrada2);
+\draw [arrow] (fresnel2) -- (netradb2);
+
+\node (scatppa1b1) [scatpp, below of=netrada1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A1B1 \\ \texttt{incoming:2} \end{tabular}};
+\node (scatppa2b2) [scatpp, below of=netradb1, yshift=-1.5cm, xshift=2cm] {\begin{tabular}{c} Scattering PP A2B2 \\ \texttt{incoming:2} \end{tabular}};
+
+\draw [arrow] (netrada1) -- (scatppa1b1);
+\draw [arrow] (netradb1) -- (scatppa1b1);
+\draw [arrow] (netrada2) -- (scatppa2b2);
+\draw [arrow] (netradb2) -- (scatppa2b2);
+
+\end{tikzpicture}
+```
+:::
+
+::: {.column width="50%" style="font-size: 50%;"}
+$$
+\begin{array}{cccccccc}
+0 & 0 & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 0\\
+0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+\end{array}
+$$
+:::
+::::
+
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{scat} = [rectangle, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!50]
+\tikzstyle{fresnel} = [rectangle, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=red!50]
+\tikzstyle{nr} = [rectangle, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=green!50]
+\tikzstyle{scatpp} = [rectangle, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=blue!50]
+
+% indices are (A/B, 1/2)
+\node (n000) [scat] {SA};
+\node (n001) [scat, right=0mm of n000] {SB};
+\node (n002) [fresnel, right=0mm of n001] {F1};
+\node (n003) [fresnel, right=0mm of n002] {F2};
+\node (n004) [nr, right=0mm of n003] {NRA1};
+\node (n005) [nr, right=0mm of n004] {NRA2};
+\node (n006) [nr, right=0mm of n005] {NRB1};
+\node (n007) [nr, right=0mm of n006] {NRB2};
+\node (n008) [scatpp, right=0mm of n007] {SPPA1B1};
+\node (p000) [scatpp, right=0mm of n008] {SPPA2B2};
+\end{tikzpicture}
+```
+
+Matrix is sparse.
+
+
+## Graph structure - Forward/Backward star
+:::: {.columns}
+
+::: {.column width="50%" style="font-size: 50%;"}
+$$
+\begin{array}{cccccccc}
+0 & 0 & 0 & 0 & 1 & 1 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 1 & 1 & 0 & 0\\
+0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 1 & 0 & 1 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 1\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0\\
+\end{array}
+$$
+:::
+
+::: {.column width="50%"}
+``` tikz
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{scat} = [rectangle, minimum width=1cm, minimum height=1cm,text centered, draw=black, fill=yellow!50]
+\tikzstyle{fresnel} = [rectangle, minimum width=1cm, minimum height=1cm,text centered, draw=black, fill=red!50]
+\tikzstyle{nr} = [rectangle, minimum width=1cm, minimum height=1cm,text centered, draw=black, fill=green!50]
+\tikzstyle{scatpp} = [rectangle, minimum width=1cm, minimum height=1cm,text centered, draw=black, fill=blue!50]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+
+% indices are (A/B, 1/2)
+\node (z000) [scat] {1};
+\node (z001) [scat, right=0mm of z000] {1};
+\node (z002) [scat, right=0mm of z001] {1};
+\node (z003) [scat, right=0mm of z002] {1};
+\node (z004) [fresnel, right=0mm of z003] {1};
+\node (z005) [fresnel, right=0mm of z004] {1};
+\node (z006) [fresnel, right=0mm of z005] {1};
+\node (z007) [fresnel, right=0mm of z006] {1};
+\node (z008) [nr, right=0mm of z007] {1};
+\node (z009) [nr, right=0mm of z008] {1};
+\node (z010) [nr, right=0mm of z009] {1};
+\node (z011) [nr, right=0mm of z010] {1};
+
+\node (n000) [scat, below=of z000] {4};
+\node (n001) [scat, right=0mm of n000] {5};
+\node (n002) [scat, right=0mm of n001] {6};
+\node (n003) [scat, right=0mm of n002] {7};
+\node (n004) [fresnel, right=0mm of n003] {4};
+\node (n005) [fresnel, right=0mm of n004] {6};
+\node (n006) [fresnel, right=0mm of n005] {5};
+\node (n007) [fresnel, right=0mm of n006] {7};
+\node (n008) [nr, right=0mm of n007] {8};
+\node (n009) [nr, right=0mm of n008] {9};
+\node (n010) [nr, right=0mm of n009] {8};
+\node (n011) [nr, right=0mm of n010] {9};
+
+\node (p000) [scat, below=of n000] {2};
+\node (p001) [scat, right=0mm of p000] {4};
+\node (p002) [scat, right=0mm of p001] {6};
+\node (p003) [scat, right=0mm of p002] {8};
+\node (p004) [scat, right=0mm of p003] {9};
+\node (p005) [scat, right=0mm of p004] {10};
+\node (p006) [scat, right=0mm of p005] {11};
+\node (p007) [scat, right=0mm of p006] {12};
+
+\draw [arrow] (p000.north) -- (n002.south west);
+\draw [arrow] (p001.north) -- (n004.south west);
+\draw [arrow] (p002.north) -- (n006.south west);
+\draw [arrow] (p003.north) -- (n008.south west);
+\draw [arrow] (p004.north) -- (n009.south west);
+\draw [arrow] (p005.north) -- (n010.south west);
+\draw [arrow] (p006.north) -- (n011.south west);
+\draw [arrow] (p007.north) -- (n011.south east);
+\end{tikzpicture}
+```
+:::
+::::
+
+Condensed-Storage-Rows (CSR) format $\Rightarrow$ Forward star. Allows to find outgoing nodes. Similarly, CSC $\Rightarrow$ backward star.

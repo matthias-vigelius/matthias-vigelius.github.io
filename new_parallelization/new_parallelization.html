@@ -185,11 +185,11 @@
 <img data-src="new_parallelization_files/mediabag/4178af3f9e0a08d850f5fdb536bfa3f938ff1d54.svg">
 <p>Lock-free: a finished node checks if it can start its downstream nodes.</p>
 </section>
-<section id="implementation-details-equivalence-sets" class="slide level2">
-<h2>Implementation details: Equivalence sets</h2>
+<section id="task-indices" class="slide level2">
+<h2>Task indices</h2>
 <div class="columns">
 <div class="column" style="width:50%;">
-<img data-src="new_parallelization_files/mediabag/4aa3f3d86e22b105f2d675038604b52958c98cd5.svg">
+<img data-src="new_parallelization_files/mediabag/91d0a1ae3054036240135b732234b0fe54e030ed.svg">
 </div><div class="column" style="width:50%;">
 <p><span class="math display">\[
 \begin{aligned}
@@ -201,6 +201,55 @@ i_c &amp;= j_b / 1
 \end{aligned}
 \]</span></p>
 </div></div>
+<img data-src="new_parallelization_files/mediabag/40ebae08b7cbce279507def289c1f2aa173fbab0.svg">
+<p>Task vector: contiguous “row major” layout with index <span class="math inline">\((\mathtt{taskId}, i_0, \ldots, i_n)\)</span>.</p>
+</section>
+<section id="graph-structure---adjacency-matrix" class="slide level2">
+<h2>Graph structure - Adjacency matrix</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<img data-src="new_parallelization_files/mediabag/f735c9fc469b4701a1470d2fb097c09e8d011feb.svg">
+</div><div class="column" style="font-size: 50%;">
+<p><span class="math display">\[
+\begin{array}{cccccccc}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 1 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+\end{array}
+\]</span></p>
+</div></div>
+<img data-src="new_parallelization_files/mediabag/b63a696440197c902b4f63510ba4f780043aedb8.svg">
+<p>Matrix is sparse.</p>
+</section>
+<section id="graph-structure---forwardbackward-star" class="slide level2">
+<h2>Graph structure - Forward/Backward star</h2>
+<div class="columns">
+<div class="column" style="font-size: 50%;">
+<p><span class="math display">\[
+\begin{array}{cccccccc}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 1 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+\end{array}
+\]</span></p>
+</div><div class="column" style="width:50%;">
+<img data-src="new_parallelization_files/mediabag/3e1f5e6be0814e9a18a6cbb9323d54730cad374f.svg">
+</div></div>
+<p>Condensed-Storage-Rows (CSR) format <span class="math inline">\(\Rightarrow\)</span> Forward star. Allows to find outgoing nodes. Similarly, CSC <span class="math inline">\(\Rightarrow\)</span> backward star.</p>
 
 </section>
     </div>
