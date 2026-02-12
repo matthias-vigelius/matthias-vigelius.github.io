@@ -18,7 +18,7 @@ diagram:
   engine:
     tikz:
       header-includes: |
-          \usetikzlibrary{shapes.geometric, arrows, backgrounds, positioning}
+          \usetikzlibrary{shapes.geometric, arrows, backgrounds, positioning, quotes}
 
 resources:
   - demo.pdf
@@ -696,3 +696,167 @@ $$
 ::::
 
 Condensed-Storage-Rows (CSR) format $\Rightarrow$ Forward star. Allows to find outgoing nodes. Similarly, CSC $\Rightarrow$ backward star.
+
+## `AbstractTask`
+
+* Corresponds to node in abstract graph
+* knows dependencies (incoming edges)
+* can tell which sweep parameters are relevant
+* contains "payload" as functor
+* fairly low level
+
+## `TaskTraits`
+
+```cpp
+template<> struct TaskTraits<TaskId::Emission>
+{
+   static constexpr std::array<TaskId, 2> dependencies{TaskId::Collect_NetRadiationPassiveOptics,
+                                                       TaskId::Collect_Emission};
+
+   using ResultType = Optics::TaskEmissionCoupling;
+   using ParameterType = Optics::TaskEmissionParameters;
+   using TaskType = Optics::TaskEmission;
+
+   // ...
+}
+```
+
+## `GenericTaskParameters`
+ 
+```cpp
+class TaskNetRadiationParameters
+  : public GenericTaskParameters<
+            GenericTaskParameterId::LIGHT_HANDLING,
+            GenericTaskParameterId::ABSORPTION_EMISSION_MODE>
+  {
+```
+
+Combines sweepable parameters (given as template arguments)
+
+```cpp
+std::unique_ptr<AbstractTaskResult> TaskNetRadiation::run(
+const TaskNetRadiationParameters &pars, ...) {
+  bool absorptionEmissionMode =
+  pars.get<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>();
+```
+
+
+## `GenericTaskParameters`
+
+```cpp
+template<> struct GenericTaskParameterTraits<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>
+{
+   // true means emission ;)
+   using ValueType = bool;
+};
+template<>
+GenericTaskParameterTraits<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>::ValueType
+create<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>(SimulationParameter const& simp)
+{
+   return simp.getMLOP().getEmission();
+}
+template<>
+bool isParameterRelevant<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>(ParameterIdentifier const& pid,
+                                                                           SimulationParameter const&)
+{
+   const ParameterIdentifier::mlop_idtype mlopId = pid.getMLOPID();
+   switch (mlopId)
+   {
+      case ParameterIdentifier::P_EMISSION: return true;
+      default: return false;
+   }
+};
+template<>
+  void setValue<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>(
+     typename GenericTaskParameterTraits<GenericTaskParameterId::ABSORPTION_EMISSION_MODE>::ValueType& val,
+     ParameterIdentifier const& pid, double value, int)
+  {
+     const ParameterIdentifier::mlop_idtype mlopId = pid.getMLOPID();
+     switch (mlopId)
+     {
+        case ParameterIdentifier::ParameterIdentifier::P_EMISSION: val = (value == 0 ? false : true);
+        default:
+        {
+        }
+     }
+  };
+```
+
+## `GenericTaskParameters`
+
+```cpp
+template<GenericTaskParameterId... ids> class GenericTaskParameters
+{
+
+// ...
+
+static constexpr bool isParameterRelevant(ParameterIdentifier const& pid,
+   SimulationParameter const& simp)
+{
+   return
+     (GenericTaskParameterSetters::isParameterRelevant<ids>(pid, simp) || ...);
+};
+
+void setValue(ParameterIdentifier const& pid, double value, int index)
+{
+   (GenericTaskParameterSetters::setValue<ids>(get<ids>(), pid, value, index), ...);
+};
+```
+
+## Generic Task
+``` tikz
+\scalebox{1.5}{
+\definecolor{cosmiclatte}{HTML}{FFF8E7}
+\begin{tikzpicture}[background rectangle/.style={fill=cosmiclatte}, show background rectangle]
+\tikzstyle{simple} = [rectangle, rounded corners, minimum width=3cm, minimum height=1cm,text centered, draw=black, fill=yellow!70]
+\tikzstyle{arrow} = [thick,->,>=stealth, draw=black]
+\node (Sweeper) [simple] {\texttt{Sweeper}};
+\node (AbstractTask) [simple, right= of Sweeper, xshift=2.5cm] {\texttt{AbstractTask}};
+\node (GenericTask) [simple, below= of AbstractTask] {\texttt{GenericTask<taskId>::run}};
+\node (GenericTaskPar) [simple, below = of GenericTask, xshift = -2.5cm] {\texttt{GenericTaskParameter<taskId>::set}};
+\node (Task) [simple, below = of GenericTask, xshift = 2.5cm, yshift=-2.5cm] {\texttt{TaskTraits<taskId>::TaskType::run}};
+
+\draw [arrow] (Sweeper) edge["creates"] (AbstractTask);
+\draw [arrow] (AbstractTask) edge["runs"] (GenericTask);
+\draw [arrow] (GenericTask) edge["calls"] (GenericTaskPar);
+\draw [arrow] (GenericTaskPar) edge["input"] (Task);
+\draw [arrow] (GenericTask) edge["calls"] (Task);
+\end{tikzpicture}
+}
+```
+
+## Task Run Method
+
+```cpp
+std::unique_ptr<AbstractTaskResult>
+TaskEmission::run(TaskEmissionParameters const&,
+                  TaskCollectEmissionResultsCoupling const& emissionCoupling,
+                  TaskCollectNetRadiationPassiveOpticsResultsCoupling const& nrPoCoupling)
+{
+// ..
+}
+```
+
+`GenericTask::run` takes parameters and dependencies from `TaskTraits` and calls the run method with signature
+
+```cpp
+TaskTraits<taskId>::TaskType::run(
+      TaskTraits<taskId>::ParameterType const &par,
+      TaskTraits<TaskTraits<taskId>::dependencies[N-1]>::ResultType const &dep1,
+      TaskTraits<TaskTraits<taskId>::dependencies[N-2]>::ResultType const &dep2,
+      // ...
+      TaskTraits<TaskTraits<taskId>::dependencies[0]>::ResultType const &dep2)
+```
+
+# How to define abstract graph?
+
+* "scenario"-wise (e.g. pure DD, DD+EM, etc..)
+* node-wise (`TaskDriftDiffusion` is needed if DD is active)
+* result-wise (we need DD result and all inputs)
+
+# Under construction
+
+* Memory consumption for large sweeps
+* `AbstractTask` is a mess
+* `AbstractTaskResults` has a huge `std::variant`
+* Naming
