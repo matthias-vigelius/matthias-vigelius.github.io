@@ -432,6 +432,37 @@ i_c &amp;= j_b / 1
 <span id="cb7-4"><a href=""></a>      TaskTraits<span class="op">&lt;</span>TaskTraits<span class="op">&lt;</span>taskId<span class="op">&gt;::</span>dependencies<span class="op">[</span>N<span class="op">-</span><span class="dv">2</span><span class="op">]&gt;::</span>ResultType <span class="at">const</span> <span class="op">&amp;</span>dep2<span class="op">,</span></span>
 <span id="cb7-5"><a href=""></a>      <span class="co">// ...</span></span>
 <span id="cb7-6"><a href=""></a>      TaskTraits<span class="op">&lt;</span>TaskTraits<span class="op">&lt;</span>taskId<span class="op">&gt;::</span>dependencies<span class="op">[</span><span class="dv">0</span><span class="op">]&gt;::</span>ResultType <span class="at">const</span> <span class="op">&amp;</span>dep2<span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="how-to-define-abstract-graph" class="title-slide slide level1 center">
+<h1>How to define abstract graph?</h1>
+<ul>
+<li>“scenario”-wise (e.g.&nbsp;pure DD, DD+EM, etc..)</li>
+<li>node-wise (<code>TaskDriftDiffusion</code> is needed if DD is active)</li>
+<li>result-wise (we need DD result and all inputs)</li>
+</ul>
+</section>
+
+<section id="feature-completion" class="title-slide slide level1 center">
+<h1>Feature completion</h1>
+<ul>
+<li>AB/DD/EM <span style="color: green;"> ✓ </span></li>
+<li>AB+DD <span style="color: green;"> ✓</span></li>
+<li>DD+EM <span style="color: green;"> ✓</span></li>
+<li>Quenching <span style="color: green;"> ✓</span></li>
+<li>AB(+DD)+EM <span style="color: red;"> ×</span></li>
+<li>Down-convertsion <span style="color: red;"> ×</span></li>
+<li>Mode/Dissipation analysis <span style="color: red;"> × </span></li>
+</ul>
+</section>
+
+<section id="under-construction" class="title-slide slide level1 center">
+<h1>Under construction</h1>
+<ul>
+<li>Memory consumption for large sweeps</li>
+<li><code>AbstractTask</code> is a mess</li>
+<li><code>AbstractTaskResults</code> has a huge <code>std::variant</code></li>
+<li>Naming</li>
+</ul>
 
 </section>
     </div>

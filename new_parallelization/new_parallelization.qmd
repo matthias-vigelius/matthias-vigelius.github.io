@@ -853,6 +853,19 @@ TaskTraits<taskId>::TaskType::run(
 * "scenario"-wise (e.g. pure DD, DD+EM, etc..)
 * node-wise (`TaskDriftDiffusion` is needed if DD is active)
 * result-wise (we need DD result and all inputs)
+  
+# Feature completion
+
+* AB/DD/EM <span style="color: green;"> &check; </span>
+* AB+DD <span style="color: green;"> &check;</span>
+* DD+EM <span style="color: green;"> &check;</span>
+* Quenching <span style="color: green;"> &check;</span>
+* AB(+DD)+EM <span style="color: red;"> &times;</span>
+* Down-conversion <span style="color: red;"> &times;</span>
+* Mode/Dissipation analysis <span style="color: red;"> &times; </span>
+
+
+
 
 # Under construction
 
@@ -860,3 +873,4 @@ TaskTraits<taskId>::TaskType::run(
 * `AbstractTask` is a mess
 * `AbstractTaskResults` has a huge `std::variant`
 * Naming
+
